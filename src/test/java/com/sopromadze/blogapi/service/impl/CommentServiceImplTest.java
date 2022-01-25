@@ -1,5 +1,6 @@
 package com.sopromadze.blogapi.service.impl;
 
+import com.sopromadze.blogapi.exception.ResourceNotFoundException;
 import com.sopromadze.blogapi.model.Comment;
 import com.sopromadze.blogapi.model.Post;
 import com.sopromadze.blogapi.model.role.Role;
@@ -15,9 +16,14 @@ import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+
+import static org.mockito.Mockito.*;
+
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -29,20 +35,33 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 class CommentServiceImplTest {
 
-
+    @InjectMocks
     CommentServiceImpl commentService;
 
-
-    CommentService commentServiceInterface;
-
-    @MockBean
+    @Mock
     CommentRepository commentRepository;
 
-    @MockBean
+    @Mock
     PostRepository postRepository;
 
-    @MockBean
+    @Mock
     UserRepository userRepository;
+
+    //Constantes de respuesta
+    private static final String THIS_COMMENT = " this comment";
+
+    private static final String YOU_DON_T_HAVE_PERMISSION_TO = "You don't have permission to ";
+
+    private static final String ID_STR = "id";
+
+    private static final String COMMENT_STR = "Comment";
+
+    private static final String POST_STR = "Post";
+
+    private static final String COMMENT_DOES_NOT_BELONG_TO_POST = "Comment does not belong to post";
+
+    //Constantes de respuesta
+
 
     User user;
     Comment comment;
@@ -51,7 +70,7 @@ class CommentServiceImplTest {
     @BeforeEach
     void initData() {
 
-        commentService = new CommentServiceImpl(commentRepository, postRepository, userRepository);
+        //commentService = new CommentServiceImpl(commentRepository, postRepository, userRepository);
 
         user = User.builder()
                 .id(1L)
@@ -87,17 +106,33 @@ class CommentServiceImplTest {
     }
 
     //Funcionamiento correcto de getComment
-    //Devolucion de excepcion ResourceNotFound
-    //Devolucion de excepcion BlogapiException
+
     @Test
     public void whenGetCommentFindPostAndComment_success() {
 
 
-        Mockito.when(postRepository.findById(any(Long.class))).thenReturn(Optional.of(post));
-        Mockito.when(commentRepository.findById(any(Long.class))).thenReturn(Optional.of(comment));
+        when(postRepository.findById(any(Long.class))).thenReturn(Optional.of(post));
+        when(commentRepository.findById(any(Long.class))).thenReturn(Optional.of(comment));
 
         assertEquals(comment, commentService.getComment(post.getId(), comment.getId()));
 
     }
+
+    //Devolucion de excepcion ResourceNotFound
+    @Test
+    public void whenGetCommentPostOrCommentNotFound_throwResourcetNotFoundException() {
+
+        Long idInexistente = 0L;
+
+        //when(commentRepository.findById(idInexistente)).thenReturn(null);
+
+            when(postRepository.findById(idInexistente)).thenThrow(new ResourceNotFoundException(POST_STR, ID_STR, idInexistente));
+            //assertThrows(ResourceNotFoundException)
+
+    }
+
+
+    //Devolucion de excepcion BlogapiException
+
 
 }
