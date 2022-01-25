@@ -31,26 +31,26 @@ class CategoryServiceImplTest {
     @InjectMocks
     private CategoryServiceImpl categoryServiceImpl;
 
-
     Category c;
-    List <Post> posts;
+    List <Post> postsList;
     ResponseEntity<Category> categoryResponseEntity;
 
     @BeforeEach
     void init(){
 
-        posts = new ArrayList<>();
+        postsList = new ArrayList<>();
 
-        c = new Category();
-        c.setId(1L);
-        c.setName("categoria");
-        c.setPosts(posts);
+        c = Category.builder()
+                .id(1L)
+                .name("categoria")
+                .posts(postsList)
+                .build();
 
         categoryResponseEntity = ResponseEntity.ok().body(c);
     }
 
     @Test
-    void getCategoryTest() {
+    void getCategory_success() {
 
         lenient().when(categoryRepository.findById(1L)).thenReturn(Optional.of(c));
         assertEquals(categoryResponseEntity , categoryServiceImpl.getCategory(c.getId()));
@@ -59,6 +59,7 @@ class CategoryServiceImplTest {
     @Test
     void getCategoryTest_Exception(){
 
-        assertThrows(ResourceNotFoundException.class, () -> categoryRepository.findById(anyLong()));
+        Exception ex = assertThrows(ResourceNotFoundException.class, () -> categoryRepository.findById(null), "mensaje");
+        assertEquals("mensaje",ex.getMessage());
     }
 }
