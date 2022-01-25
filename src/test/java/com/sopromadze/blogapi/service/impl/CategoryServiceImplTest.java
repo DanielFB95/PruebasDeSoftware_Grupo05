@@ -1,18 +1,19 @@
 package com.sopromadze.blogapi.service.impl;
 
+import com.sopromadze.blogapi.exception.ResourceNotFoundException;
 import com.sopromadze.blogapi.model.Category;
 import com.sopromadze.blogapi.model.Post;
 import com.sopromadze.blogapi.repository.CategoryRepository;
-import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Required;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.http.ResponseEntity;
+
 import static org.mockito.Mockito.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,28 +22,43 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 
-@DataJpaTest
+@ExtendWith(MockitoExtension.class)
 class CategoryServiceImplTest {
 
-    @Autowired
+    @Mock
     private CategoryRepository categoryRepository;
 
-    @Autowired
+    @InjectMocks
     private CategoryServiceImpl categoryServiceImpl;
 
-    @Test
-    void getCategoryTest() {
 
-        List<Post> posts = new ArrayList<Post>();
+    Category c;
+    List <Post> posts;
+    ResponseEntity<Category> categoryResponseEntity;
 
-        Category c = new Category();
+    @BeforeEach
+    void init(){
+
+        posts = new ArrayList<>();
+
+        c = new Category();
         c.setId(1L);
         c.setName("categoria");
         c.setPosts(posts);
 
-        when(categoryRepository.findById(anyLong())).thenReturn(Optional.ofNullable(c));
+        categoryResponseEntity = ResponseEntity.ok().body(c);
+    }
 
+    @Test
+    void getCategoryTest() {
 
+        lenient().when(categoryRepository.findById(1L)).thenReturn(Optional.of(c));
+        assertEquals(categoryResponseEntity , categoryServiceImpl.getCategory(c.getId()));
+    }
 
+    @Test
+    void getCategoryTest_Exception(){
+
+        assertThrows(ResourceNotFoundException.class, () -> categoryRepository.findById(anyLong()));
     }
 }
