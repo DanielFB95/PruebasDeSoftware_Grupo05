@@ -13,7 +13,10 @@ import com.sopromadze.blogapi.repository.PostRepository;
 import com.sopromadze.blogapi.repository.UserRepository;
 import com.sopromadze.blogapi.security.UserPrincipal;
 import com.sopromadze.blogapi.service.CommentService;
+
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -29,13 +32,11 @@ import org.mockito.Mock;
 import static org.mockito.Mockito.*;
 
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -72,9 +73,12 @@ class CommentServiceImplTest {
     //Constantes de respuesta
 
 
-    User user;
+    User user, anotherUser, admin;
     Comment comment, anotherComment;
     Post post, anotherPost;
+
+    CommentRequest commentRequest;
+    UserPrincipal userPrincipal, anotherUserPrincipal, adminPrincipal;
 
     @BeforeEach
     void initData() {
@@ -93,8 +97,31 @@ class CommentServiceImplTest {
                 .roles(new ArrayList<>())
                 .build();
 
+        anotherUser = User.builder()
+                .id(2L)
+                .firstName("Ana Maria")
+                .lastName("Galan")
+                .username("Anamari76")
+                .password("micontrasenaespecial")
+                .email("anamari76@gmail.com")
+                .comments(new ArrayList<>())
+                .roles(new ArrayList<>())
+                .build();
+
+        admin = User.builder()
+                .id(3L)
+                .firstName("Luisa")
+                .lastName("Fernandez")
+                .username("AdminDelBlog")
+                .password("micontrasenaespecial")
+                .email("yosoyadmin@admin.com")
+                .comments(new ArrayList<>())
+                .roles(new ArrayList<>())
+                .build();
 
         user.getRoles().add(new Role(RoleName.ROLE_USER));
+        anotherUser.getRoles().add(new Role(RoleName.ROLE_USER));
+        admin.getRoles().add(new Role(RoleName.ROLE_USER));
 
         comment = Comment.builder()
                 .id(1L)
@@ -131,7 +158,11 @@ class CommentServiceImplTest {
         user.getComments().add(comment);
         comment.setPost(post);
 
+        commentRequest = new CommentRequest();
 
+        userPrincipal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getPassword(), new ArrayList<>());
+        anotherUserPrincipal = new UserPrincipal(anotherUser.getId(), anotherUser.getFirstName(), anotherUser.getLastName(), anotherUser.getUsername(), anotherUser.getEmail(), anotherUser.getPassword(), new ArrayList<>());
+        adminPrincipal = new UserPrincipal(admin.getId(), admin.getFirstName(), admin.getLastName(), admin.getUsername(), admin.getEmail(), admin.getPassword(), Arrays.asList(new SimpleGrantedAuthority(RoleName.ROLE_ADMIN.toString())));
     }
 
     //Funcionamiento correcto de getComment
@@ -160,7 +191,7 @@ class CommentServiceImplTest {
 
     }
 
-    private static Stream<Arguments> getMockIds(){
+    private static Stream<Arguments> getMockIds() {
         return Stream.of(
                 Arguments.arguments(1L, 0L), //Post existente, pero comentario no
                 Arguments.arguments(0L, 1L) //Comentario existente, pero post no
@@ -170,7 +201,7 @@ class CommentServiceImplTest {
 
     //Devolucion de excepcion BlogapiException
     @Test
-    public void getCommentWrongPost_blogApiNotFoundException(){
+    public void getCommentWrongPost_blogApiException() {
 
         when(postRepository.findById(any(Long.class))).thenReturn(Optional.of(anotherPost));
         when(commentRepository.findById(any(Long.class))).thenReturn(Optional.of(comment));
@@ -178,30 +209,60 @@ class CommentServiceImplTest {
         //Post no relacionado con el comentario buscado
         assertThrows(BlogapiException.class, () -> commentService.getComment(anotherPost.getId(), comment.getId()));
 
-    }
 
+    }
 
 
     ////////////
 
-    @Test
-    public void updateComment_success(){
+
+    //Funcionamiento correcto de updateComment (COMO USUARIO Y COMO ADMIN)
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1})
+    @DisplayName("Editar comentario como USER y como ADMIN con éxito")
+    public void updateComment_success(int index) {
+
+        UserPrincipal currentUser;
+        List<UserPrincipal> mockUsers = Arrays.asList(userPrincipal, adminPrincipal);
+        currentUser = mockUsers.get(index);
+
+        String newBody = "Rectificar es bueno, por eso cambio este comentario.";
 
         when(postRepository.findById(any(Long.class))).thenReturn(Optional.of(post));
         when(commentRepository.findById(any(Long.class))).thenReturn(Optional.of(comment));
 
-        CommentRequest commentRequest = new CommentRequest();
-        commentRequest.setBody("Rectificar es bueno, por eso cambio este comentario.");
-
-        UserPrincipal userPrincipal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getPassword(), new ArrayList<>());
-
-        Comment commentEdited = commentService.updateComment(post.getId(),
+        commentRequest.setBody(newBody);
+        commentService.updateComment(post.getId(),
                 comment.getId(),
                 commentRequest,
-                userPrincipal);
-        //TODO: SOLUCIONAR:  Cannot invoke "com.sopromadze.blogapi.model.Comment.getBody()" because "commentEdited" is null
-        assertTrue(commentEdited.getBody() == commentRepository.findById(comment.getId()).get().getBody() );
+                currentUser);
+
+        //Nuevo comentario ---- Cuerpo del comentario buscado por ID
+        assertEquals(newBody, commentService.getComment(post.getId(), comment.getId()).getBody());
 
     }
+
+
+    //Usuario no logueado tratando de editar un comentario
+    @Test
+    @DisplayName("Lanzar excepción si un USER edita un comentario de otro")
+    public void updateCommentUnathorized_blogApiException() {
+
+
+        String newBody = "Intentando cambiar un comentario de otra persona.";
+
+        when(postRepository.findById(any(Long.class))).thenReturn(Optional.of(post));
+        when(commentRepository.findById(any(Long.class))).thenReturn(Optional.of(comment));
+
+        commentRequest.setBody(newBody);
+
+        assertThrows(BlogapiException.class, () ->
+                commentService.updateComment(post.getId(),
+                        comment.getId(),
+                        commentRequest,
+                        anotherUserPrincipal));
+
+    }
+
 
 }
