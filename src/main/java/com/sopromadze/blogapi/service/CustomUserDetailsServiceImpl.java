@@ -1,4 +1,4 @@
-package com.sopromadze.blogapi.service.impl;
+package com.sopromadze.blogapi.service;
 
 import com.sopromadze.blogapi.model.user.User;
 import com.sopromadze.blogapi.repository.UserRepository;

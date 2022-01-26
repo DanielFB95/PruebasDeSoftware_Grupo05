@@ -1,4 +1,4 @@
-package com.sopromadze.blogapi.service.impl;
+package com.sopromadze.blogapi.service;
 
 import com.sopromadze.blogapi.exception.BlogapiException;
 import com.sopromadze.blogapi.exception.ResourceNotFoundException;

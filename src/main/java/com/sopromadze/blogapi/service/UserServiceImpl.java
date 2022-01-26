@@ -1,4 +1,4 @@
-package com.sopromadze.blogapi.service.impl;
+package com.sopromadze.blogapi.service;
 
 import com.sopromadze.blogapi.exception.AccessDeniedException;
 import com.sopromadze.blogapi.exception.AppException;
