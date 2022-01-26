@@ -4,13 +4,16 @@ import com.sopromadze.blogapi.model.Album;
 import com.sopromadze.blogapi.model.user.User;
 import com.sopromadze.blogapi.payload.AlbumResponse;
 import com.sopromadze.blogapi.payload.PagedResponse;
+import com.sopromadze.blogapi.payload.request.AlbumRequest;
 import com.sopromadze.blogapi.repository.AlbumRepository;
+import com.sopromadze.blogapi.repository.UserRepository;
 import com.sopromadze.blogapi.security.UserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,14 +37,18 @@ class AlbumServiceImplTest {
     AlbumServiceImpl albumService;
 
     @Mock
-    private AlbumRepository albumRepository;
+     AlbumRepository albumRepository;
 
     @Mock
-    private ModelMapper modelMapper;
+     ModelMapper modelMapper;
+
+    @Mock
+    UserRepository userRepository;
 
 
     Album album;
     AlbumResponse albumResponse;
+    AlbumRequest albumRequest;
     User user;
     UserPrincipal userPrincipal;
 
@@ -63,8 +70,14 @@ class AlbumServiceImplTest {
         albumResponse = new AlbumResponse();
 
         albumResponse.setTitle("Album 2º");
-        album.setCreatedAt(Instant.now());
-        album.setUpdatedAt(Instant.now());
+        albumResponse.setCreatedAt(Instant.now());
+        albumResponse.setUpdatedAt(Instant.now());
+
+        albumRequest = new AlbumRequest();
+
+        albumRequest.setTitle("Album 3º");
+        albumRequest.setCreatedAt(Instant.now());
+        albumRequest.setUpdatedAt(Instant.now());
 
         userPrincipal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getPassword(), new ArrayList<>());
 
@@ -99,11 +112,23 @@ class AlbumServiceImplTest {
     @Test
     void whenDeleteAlbum_success(){
 
+        AlbumServiceImpl albumServiceImpl = mock(AlbumServiceImpl.class);
 
+        albumRepository.save(album);
 
-        when(albumRepository.deleteById(album.getId(),userPrincipal ));
-        assertTrue();
+        doNothing().when(albumServiceImpl).deleteAlbum(isA(Long.class),isA(UserPrincipal.class));
+        albumServiceImpl.deleteAlbum(1L,userPrincipal);
 
+        verify(albumServiceImpl, times(1)).deleteAlbum(1L, userPrincipal);
+
+    }
+
+    @Test
+    void whenAddAlbum_success(){
+
+        modelMapper.map(albumRequest, album);
+        when(albumService.addAlbum(albumRequest,userPrincipal)).thenReturn(album);
+        assertEquals(album, albumService.addAlbum(albumRequest,userPrincipal));
     }
 
 }

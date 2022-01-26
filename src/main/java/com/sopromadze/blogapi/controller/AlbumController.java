@@ -56,7 +56,7 @@ public class AlbumController {
 
 	@PostMapping
 	@PreAuthorize("hasRole('USER')")
-	public ResponseEntity<Album> addAlbum(@Valid @RequestBody AlbumRequest albumRequest, @CurrentUser UserPrincipal currentUser) {
+	public Album addAlbum(@Valid @RequestBody AlbumRequest albumRequest, @CurrentUser UserPrincipal currentUser) {
 		return albumService.addAlbum(albumRequest, currentUser);
 	}
 
@@ -74,8 +74,9 @@ public class AlbumController {
 
 	@DeleteMapping("/{id}")
 	@PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
-	public ResponseEntity<ApiResponse> deleteAlbum(@PathVariable(name = "id") Long id, @CurrentUser UserPrincipal currentUser) {
-		return albumService.deleteAlbum(id, currentUser);
+	public ResponseEntity<?> deleteAlbum(@PathVariable(name = "id") Long id, @CurrentUser UserPrincipal currentUser) {
+		 albumService.deleteAlbum(id, currentUser);
+		return ResponseEntity.noContent().build();
 	}
 
 	@GetMapping("/{id}/photos")

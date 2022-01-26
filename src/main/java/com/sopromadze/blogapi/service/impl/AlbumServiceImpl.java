@@ -67,8 +67,9 @@ public class AlbumServiceImpl implements AlbumService {
 				albums.isLast());
 	}
 
+	//Cambio que devuelva un response por un Objeto Album
 	@Override
-	public ResponseEntity<Album> addAlbum(AlbumRequest albumRequest, UserPrincipal currentUser) {
+	public Album addAlbum(AlbumRequest albumRequest, UserPrincipal currentUser) {
 		User user = userRepository.getUser(currentUser);
 
 		Album album = new Album();
@@ -77,7 +78,7 @@ public class AlbumServiceImpl implements AlbumService {
 
 		album.setUser(user);
 		Album newAlbum = albumRepository.save(album);
-		return new ResponseEntity<>(newAlbum, HttpStatus.CREATED);
+		return newAlbum;
 	}
 
 	@Override
@@ -105,14 +106,15 @@ public class AlbumServiceImpl implements AlbumService {
 		throw new BlogapiException(HttpStatus.UNAUTHORIZED, YOU_DON_T_HAVE_PERMISSION_TO_MAKE_THIS_OPERATION);
 	}
 
+	//Cambio que devuelva un void en vez de un response Entity
 	@Override
-	public ResponseEntity<ApiResponse> deleteAlbum(Long id, UserPrincipal currentUser) {
+	public void deleteAlbum(Long id, UserPrincipal currentUser) {
 		Album album = albumRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException(ALBUM_STR, ID, id));
 		User user = userRepository.getUser(currentUser);
 		if (album.getUser().getId().equals(user.getId()) || currentUser.getAuthorities()
 				.contains(new SimpleGrantedAuthority(RoleName.ROLE_ADMIN.toString()))) {
 			albumRepository.deleteById(id);
-			return new ResponseEntity<>(new ApiResponse(Boolean.TRUE, "You successfully deleted album"), HttpStatus.OK);
+			//return new ResponseEntity<>(new ApiResponse(Boolean.TRUE, "You successfully deleted album"), HttpStatus.OK);
 		}
 
 		throw new BlogapiException(HttpStatus.UNAUTHORIZED, YOU_DON_T_HAVE_PERMISSION_TO_MAKE_THIS_OPERATION);
