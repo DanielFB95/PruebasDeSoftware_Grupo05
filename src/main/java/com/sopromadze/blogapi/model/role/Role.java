@@ -1,5 +1,6 @@
 package com.sopromadze.blogapi.model.role;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.NaturalId;
@@ -17,6 +18,7 @@ import javax.persistence.Table;
 @Data
 @NoArgsConstructor
 @Table(name = "roles")
+@Builder
 public class Role {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
