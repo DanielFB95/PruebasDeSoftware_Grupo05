@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +27,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -45,12 +47,16 @@ class AlbumServiceImplTest {
     @Mock
     UserRepository userRepository;
 
+    @MockBean
+    TestEntityManager testEntityManager;
+
 
     Album album;
     AlbumResponse albumResponse;
     AlbumRequest albumRequest;
     User user;
     UserPrincipal userPrincipal;
+
 
     @BeforeEach
     void initData() {
@@ -129,6 +135,35 @@ class AlbumServiceImplTest {
         modelMapper.map(albumRequest, album);
         when(albumService.addAlbum(albumRequest,userPrincipal)).thenReturn(album);
         assertEquals(album, albumService.addAlbum(albumRequest,userPrincipal));
+    }
+
+    @Test
+    void updateAlbum_success() {
+
+        AlbumRequest newAlbum = new AlbumRequest();
+
+        newAlbum.setTitle("Album 4º");
+        newAlbum.setCreatedAt(Instant.now());
+        newAlbum.setUpdatedAt(Instant.now());
+
+
+        when(albumRepository.findById(any(Long.class))).thenReturn(Optional.of(album));
+        when(userRepository.getUser(userPrincipal)).thenReturn(user);
+
+        album.setTitle(newAlbum.getTitle());
+        newAlbum = albumRepository.save(album)
+
+
+        assertEquals(newAlbum, albumService.updateAlbum(album.getId(),albumRequest,userPrincipal));
+
+
+
+
+
+
+
+
+
     }
 
 }
