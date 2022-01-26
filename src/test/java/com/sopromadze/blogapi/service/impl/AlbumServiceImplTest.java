@@ -1,9 +1,11 @@
 package com.sopromadze.blogapi.service.impl;
 
 import com.sopromadze.blogapi.model.Album;
+import com.sopromadze.blogapi.model.user.User;
 import com.sopromadze.blogapi.payload.AlbumResponse;
 import com.sopromadze.blogapi.payload.PagedResponse;
 import com.sopromadze.blogapi.repository.AlbumRepository;
+import com.sopromadze.blogapi.security.UserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,9 +42,17 @@ class AlbumServiceImplTest {
 
     Album album;
     AlbumResponse albumResponse;
+    User user;
+    UserPrincipal userPrincipal;
 
     @BeforeEach
     void initData() {
+
+        user = new User();
+        user.setUsername("Pablo");
+        user.setFirstName("Pablo");
+        user.setLastName("Segura");
+        user.setCreatedAt(Instant.now());
 
         album = new Album();
 
@@ -56,12 +66,14 @@ class AlbumServiceImplTest {
         album.setCreatedAt(Instant.now());
         album.setUpdatedAt(Instant.now());
 
+        userPrincipal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getPassword(), new ArrayList<>());
+
 
 
         }
 
     @Test
-    void whenGetAllAlbums_succes(){
+    void whenGetAllAlbums_success(){
 
         List<AlbumResponse> data2 = Arrays.asList(albumResponse);
         Page<Album> data = new PageImpl<>(Arrays.asList(album));
@@ -81,6 +93,16 @@ class AlbumServiceImplTest {
         when(modelMapper.map(data.getContent(), AlbumResponse[].class)).thenReturn(albumResponses);
 
         assertEquals(result, albumService.getAllAlbums(1,1));
+
+    }
+
+    @Test
+    void whenDeleteAlbum_success(){
+
+
+
+        when(albumRepository.deleteById(album.getId(),userPrincipal ));
+        assertTrue();
 
     }
 
