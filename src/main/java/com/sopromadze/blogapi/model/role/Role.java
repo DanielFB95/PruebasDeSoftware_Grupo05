@@ -1,5 +1,6 @@
 package com.sopromadze.blogapi.model.role;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,7 @@ import javax.persistence.Table;
 @Entity
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "roles")
 @Builder
 public class Role {
