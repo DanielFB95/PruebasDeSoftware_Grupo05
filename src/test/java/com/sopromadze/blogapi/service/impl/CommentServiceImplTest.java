@@ -7,6 +7,7 @@ import com.sopromadze.blogapi.model.Post;
 import com.sopromadze.blogapi.model.role.Role;
 import com.sopromadze.blogapi.model.role.RoleName;
 import com.sopromadze.blogapi.model.user.User;
+import com.sopromadze.blogapi.payload.ApiResponse;
 import com.sopromadze.blogapi.payload.CommentRequest;
 import com.sopromadze.blogapi.repository.CommentRepository;
 import com.sopromadze.blogapi.repository.PostRepository;
@@ -26,12 +27,16 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import static org.mockito.Mockito.*;
 
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.ArrayList;
@@ -56,6 +61,10 @@ class CommentServiceImplTest {
 
     @Mock
     UserRepository userRepository;
+
+
+    //  TestEntityManager testEntityManager;
+
 
     //Constantes de respuesta
     private static final String THIS_COMMENT = " this comment";
@@ -84,7 +93,6 @@ class CommentServiceImplTest {
     void initData() {
 
         //commentService = new CommentServiceImpl(commentRepository, postRepository, userRepository);
-
 
         user = User.builder()
                 .id(1L)
@@ -261,6 +269,26 @@ class CommentServiceImplTest {
                         comment.getId(),
                         commentRequest,
                         anotherUserPrincipal));
+
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1})
+    public void deleteComment_success(int index) {
+
+
+        UserPrincipal currentUser;
+        List<UserPrincipal> mockUsers = Arrays.asList(userPrincipal, adminPrincipal);
+        currentUser = mockUsers.get(index);
+
+
+        when(postRepository.findById(any(Long.class))).thenReturn(Optional.of(post));
+        when(commentRepository.findById(any(Long.class))).thenReturn(Optional.of(comment));
+
+        ApiResponse apiResponse = commentService.deleteComment(post.getId(), comment.getId(), currentUser);
+
+
+        assertTrue(apiResponse.getSuccess());
 
     }
 
