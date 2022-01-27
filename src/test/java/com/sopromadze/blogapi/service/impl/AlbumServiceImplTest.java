@@ -22,6 +22,8 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -47,8 +49,7 @@ class AlbumServiceImplTest {
     @Mock
     UserRepository userRepository;
 
-    @MockBean
-    TestEntityManager testEntityManager;
+
 
 
     Album album;
@@ -56,12 +57,15 @@ class AlbumServiceImplTest {
     AlbumRequest albumRequest;
     User user;
     UserPrincipal userPrincipal;
+    ResponseEntity<AlbumResponse> albumResponseResponseEntity;
+
 
 
     @BeforeEach
     void initData() {
 
         user = new User();
+        user.setId(3L);
         user.setUsername("Pablo");
         user.setFirstName("Pablo");
         user.setLastName("Segura");
@@ -70,12 +74,16 @@ class AlbumServiceImplTest {
         album = new Album();
 
         album.setTitle("Album 1º");
+        album.setId(2L);
+        album.setUser(user);
         album.setCreatedAt(Instant.now());
         album.setUpdatedAt(Instant.now());
 
         albumResponse = new AlbumResponse();
 
         albumResponse.setTitle("Album 2º");
+        albumResponse.setId(7L);
+        albumResponse.setUser(user);
         albumResponse.setCreatedAt(Instant.now());
         albumResponse.setUpdatedAt(Instant.now());
 
@@ -127,6 +135,8 @@ class AlbumServiceImplTest {
 
         verify(albumServiceImpl, times(1)).deleteAlbum(1L, userPrincipal);
 
+        System.out.println(albumRepository.findById(1L));
+
     }
 
     @Test
@@ -140,21 +150,35 @@ class AlbumServiceImplTest {
     @Test
     void updateAlbum_success() {
 
+
         AlbumRequest newAlbum = new AlbumRequest();
 
         newAlbum.setTitle("Album 4º");
+        newAlbum.setId(2L);
+        newAlbum.setUser(user);
         newAlbum.setCreatedAt(Instant.now());
         newAlbum.setUpdatedAt(Instant.now());
+
 
 
         when(albumRepository.findById(any(Long.class))).thenReturn(Optional.of(album));
         when(userRepository.getUser(userPrincipal)).thenReturn(user);
 
         album.setTitle(newAlbum.getTitle());
-        newAlbum = albumRepository.save(album)
+        when(albumRepository.save(album)).thenReturn(album);
 
 
-        assertEquals(newAlbum, albumService.updateAlbum(album.getId(),albumRequest,userPrincipal));
+
+        albumResponse = new AlbumResponse();
+        albumResponse.setTitle(album.getTitle());
+        albumResponse.setId(album.getId());
+        albumResponse.setUser(user);
+
+        albumResponseResponseEntity = ResponseEntity.ok(albumResponse);
+
+
+        assertEquals(HttpStatus.OK, albumService.updateAlbum(album.getId(), newAlbum,userPrincipal).getStatusCode());
+        //assertEquals(albumResponse.getTitle(), albumService.updateAlbum(2L, newAlbum,userPrincipal).getBody().getTitle());
 
 
 
