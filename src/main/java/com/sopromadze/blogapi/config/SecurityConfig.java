@@ -3,7 +3,7 @@ package com.sopromadze.blogapi.config;
 import com.sopromadze.blogapi.repository.UserRepository;
 import com.sopromadze.blogapi.security.JwtAuthenticationEntryPoint;
 import com.sopromadze.blogapi.security.JwtAuthenticationFilter;
-import com.sopromadze.blogapi.service.CustomUserDetailsServiceImpl;
+import com.sopromadze.blogapi.service.impl.CustomUserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

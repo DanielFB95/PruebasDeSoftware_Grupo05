@@ -9,6 +9,7 @@ import com.sopromadze.blogapi.model.user.Company;
 import com.sopromadze.blogapi.model.user.User;
 import com.sopromadze.blogapi.repository.CategoryRepository;
 import com.sopromadze.blogapi.security.UserPrincipal;
+import com.sopromadze.blogapi.service.impl.CategoryServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

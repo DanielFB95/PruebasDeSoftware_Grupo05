@@ -6,7 +6,7 @@ import com.sopromadze.blogapi.model.user.User;
 import com.sopromadze.blogapi.payload.PagedResponse;
 import com.sopromadze.blogapi.repository.AlbumRepository;
 import com.sopromadze.blogapi.repository.UserRepository;
-import com.sopromadze.blogapi.service.AlbumServiceImpl;
+import com.sopromadze.blogapi.service.impl.AlbumServiceImpl;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
