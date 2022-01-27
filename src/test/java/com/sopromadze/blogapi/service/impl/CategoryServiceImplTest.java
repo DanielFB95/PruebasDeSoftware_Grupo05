@@ -44,7 +44,7 @@ class CategoryServiceImplTest {
     @Mock
     private TestEntityManager testEntityManager;
 
-    Category c;
+    Category category;
     List <Post> postsList;
     ResponseEntity<Category> categoryResponseEntityOK;
     ResponseEntity<Category> categoryResponseEntityCREATED;
@@ -53,6 +53,7 @@ class CategoryServiceImplTest {
     List<Role> listaRoles;
     Company company;
     User user;
+    User userAdmin;
     UserPrincipal userPrincipal;
 
     @BeforeEach
@@ -60,7 +61,7 @@ class CategoryServiceImplTest {
 
         postsList = new ArrayList<>();
 
-        c = Category.builder()
+        category = Category.builder()
                 .id(1L)
                 .name("categoria")
                 .posts(postsList)
@@ -95,14 +96,32 @@ class CategoryServiceImplTest {
                 .email("danielfb@gmail.com")
                 .address(null)
                 .phone("620189675")
-                .website("www.danielfb.com")
-                .roles(listaRoles)
                 .todos(new ArrayList<>())
                 .albums(new ArrayList<>())
                 .posts(new ArrayList<>())
                 .comments(new ArrayList<>())
                 .company(company)
                 .build();
+
+        user.getRoles().add(roleUser);
+
+        userAdmin = User.builder()
+                .id(1L)
+                .firstName("Juan")
+                .lastName("Fernández")
+                .username("juan")
+                .password("12345")
+                .email("juan@gmail.com")
+                .address(null)
+                .phone("600000000")
+                .todos(new ArrayList<>())
+                .albums(new ArrayList<>())
+                .posts(new ArrayList<>())
+                .comments(new ArrayList<>())
+                .company(company)
+                .build();
+
+        userAdmin.getRoles().add(roleAdmin);
 
         userPrincipal = UserPrincipal.builder()
                 .id(1L)
@@ -114,7 +133,7 @@ class CategoryServiceImplTest {
                 .authorities(new ArrayList<>())
                 .build();
 
-        categoryResponseEntityOK = ResponseEntity.ok().body(c);
+        categoryResponseEntityOK = ResponseEntity.ok().body(category);
         categoryResponseEntityCREATED = ResponseEntity.status(HttpStatus.CREATED).body(c);
     }
 
@@ -122,8 +141,8 @@ class CategoryServiceImplTest {
     @DisplayName("getCategory id 1 funciona correctamente")
     void getCategory_success() {
 
-        lenient().when(categoryRepository.findById(1L)).thenReturn(Optional.of(c));
-        assertEquals(categoryResponseEntityOK , categoryServiceImpl.getCategory(c.getId()));
+        lenient().when(categoryRepository.findById(1L)).thenReturn(Optional.of(category));
+        assertEquals(categoryResponseEntityOK , categoryServiceImpl.getCategory(category.getId()));
     }
 
     @Test
@@ -137,7 +156,30 @@ class CategoryServiceImplTest {
     @DisplayName("addCategory funciona correctamente")
     void addCategory_success(){
 
-        testEntityManager.persist(c);
-        assertEquals(categoryResponseEntityCREATED,categoryServiceImpl.addCategory(c,userPrincipal));
+        testEntityManager.persist(category);
+        assertEquals(categoryResponseEntityCREATED,categoryServiceImpl.addCategory(category,userPrincipal));
+    }
+
+    @Test
+    @DisplayName("updateCategory encuentra la categoria por id")
+    void updateCategory_findById(){
+
+        Category nuevaCategoria = Category.builder()
+                .id(1L)
+                .name("nuevaCategoria")
+                .posts(new ArrayList<>())
+                .build();
+
+        when(categoryRepository.findById(any(Long.class))).thenReturn(Optional.of(category));
+        
+
+
+    }
+
+    @Test
+    @DisplayName("updateCategory null Resource Not Found Exception")
+    void updateCategory_Exception(){
+
+        assertThrows(ResourceNotFoundException.class, () -> categoryServiceImpl.updateCategory(null,category,userPrincipal));
     }
 }
