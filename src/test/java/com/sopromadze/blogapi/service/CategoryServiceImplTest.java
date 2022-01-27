@@ -133,7 +133,7 @@ class CategoryServiceImplTest {
     @DisplayName("addCategory funciona correctamente")
     void addCategory_success(){
 
-        testEntityManager.persist(c);
+        when(categoryRepository.save(c)).thenReturn(c);
         assertEquals(categoryResponseEntityCREATED,categoryServiceImpl.addCategory(c,userPrincipal));
     }
 }
