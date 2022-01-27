@@ -13,9 +13,6 @@ import com.sopromadze.blogapi.repository.CommentRepository;
 import com.sopromadze.blogapi.repository.PostRepository;
 import com.sopromadze.blogapi.repository.UserRepository;
 import com.sopromadze.blogapi.security.UserPrincipal;
-import com.sopromadze.blogapi.service.CommentService;
-
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,16 +24,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
 import static org.mockito.Mockito.*;
 
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.ArrayList;
@@ -59,25 +52,17 @@ class CommentServiceImplTest {
     @Mock
     PostRepository postRepository;
 
-    @Mock
-    UserRepository userRepository;
-
 
     //  TestEntityManager testEntityManager;
 
 
     //Constantes de respuesta
-    private static final String THIS_COMMENT = " this comment";
-
-    private static final String YOU_DON_T_HAVE_PERMISSION_TO = "You don't have permission to ";
 
     private static final String ID_STR = "id";
 
     private static final String COMMENT_STR = "Comment";
 
     private static final String POST_STR = "Post";
-
-    private static final String COMMENT_DOES_NOT_BELONG_TO_POST = "Comment does not belong to post";
 
     //Constantes de respuesta
 
@@ -129,7 +114,7 @@ class CommentServiceImplTest {
 
         user.getRoles().add(new Role(RoleName.ROLE_USER));
         anotherUser.getRoles().add(new Role(RoleName.ROLE_USER));
-        admin.getRoles().add(new Role(RoleName.ROLE_USER));
+        admin.getRoles().add(new Role(RoleName.ROLE_ADMIN));
 
         comment = Comment.builder()
                 .id(1L)
@@ -173,9 +158,8 @@ class CommentServiceImplTest {
         adminPrincipal = new UserPrincipal(admin.getId(), admin.getFirstName(), admin.getLastName(), admin.getUsername(), admin.getEmail(), admin.getPassword(), Arrays.asList(new SimpleGrantedAuthority(RoleName.ROLE_ADMIN.toString())));
     }
 
-    //Funcionamiento correcto de getComment
-
     @Test
+    @DisplayName("Prueba de funcionamiento correcto de getComment")
     public void getComment_success() {
 
 
@@ -186,9 +170,9 @@ class CommentServiceImplTest {
 
     }
 
-    //Devolucion de excepcion ResourceNotFound
     @ParameterizedTest
     @MethodSource("getMockIds")
+    @DisplayName("Devuelve excepcion ResourceNotFound si no encuentra el post o el comentario")
     public void getCommentNotFound_resourceNotFoundException(Long postId, Long commentId) {
 
         Long idInexistente = 0L;
