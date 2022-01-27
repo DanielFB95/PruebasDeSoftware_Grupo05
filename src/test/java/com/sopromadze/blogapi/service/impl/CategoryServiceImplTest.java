@@ -26,6 +26,7 @@ import org.springframework.http.ResponseEntity;
 
 import static org.mockito.Mockito.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -77,10 +78,6 @@ class CategoryServiceImplTest {
                 .name(RoleName.ROLE_USER)
                 .build();
 
-        listaRoles = new ArrayList<>();
-        listaRoles.add(roleAdmin);
-        listaRoles.add(roleUser);
-
         company = Company.builder()
                 .id(2L)
                 .name("Compañia S.L")
@@ -101,6 +98,7 @@ class CategoryServiceImplTest {
                 .posts(new ArrayList<>())
                 .comments(new ArrayList<>())
                 .company(company)
+                .roles(Arrays.asList(roleUser))
                 .build();
 
         user.getRoles().add(roleUser);
@@ -119,6 +117,7 @@ class CategoryServiceImplTest {
                 .posts(new ArrayList<>())
                 .comments(new ArrayList<>())
                 .company(company)
+                .roles(Arrays.asList(roleAdmin))
                 .build();
 
         userAdmin.getRoles().add(roleAdmin);
@@ -134,7 +133,7 @@ class CategoryServiceImplTest {
                 .build();
 
         categoryResponseEntityOK = ResponseEntity.ok().body(category);
-        categoryResponseEntityCREATED = ResponseEntity.status(HttpStatus.CREATED).body(c);
+        categoryResponseEntityCREATED = ResponseEntity.status(HttpStatus.CREATED).body(category);
     }
 
     @Test
@@ -164,14 +163,9 @@ class CategoryServiceImplTest {
     @DisplayName("updateCategory encuentra la categoria por id")
     void updateCategory_findById(){
 
-        Category nuevaCategoria = Category.builder()
-                .id(1L)
-                .name("nuevaCategoria")
-                .posts(new ArrayList<>())
-                .build();
 
         when(categoryRepository.findById(any(Long.class))).thenReturn(Optional.of(category));
-
+        assertEquals(category, categoryRepository.findById(1L));
 
 
     }
