@@ -153,7 +153,7 @@ class CommentServiceImplTest {
 
         commentRequest = new CommentRequest();
 
-        userPrincipal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getPassword(), new ArrayList<>());
+        userPrincipal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getPassword(), Arrays.asList(new SimpleGrantedAuthority(RoleName.ROLE_USER.toString())));
         anotherUserPrincipal = new UserPrincipal(anotherUser.getId(), anotherUser.getFirstName(), anotherUser.getLastName(), anotherUser.getUsername(), anotherUser.getEmail(), anotherUser.getPassword(), new ArrayList<>());
         adminPrincipal = new UserPrincipal(admin.getId(), admin.getFirstName(), admin.getLastName(), admin.getUsername(), admin.getEmail(), admin.getPassword(), Arrays.asList(new SimpleGrantedAuthority(RoleName.ROLE_ADMIN.toString())));
     }
@@ -179,6 +179,8 @@ class CommentServiceImplTest {
 
         lenient().when(postRepository.findById(idInexistente)).thenThrow(new ResourceNotFoundException(POST_STR, ID_STR, idInexistente));
         lenient().when(commentRepository.findById(idInexistente)).thenThrow(new ResourceNotFoundException(COMMENT_STR, ID_STR, idInexistente));
+
+
         assertThrows(ResourceNotFoundException.class, () -> commentService.getComment(postId, commentId));
 
     }
@@ -186,7 +188,8 @@ class CommentServiceImplTest {
     private static Stream<Arguments> getMockIds() {
         return Stream.of(
                 Arguments.arguments(1L, 0L), //Post existente, pero comentario no
-                Arguments.arguments(0L, 1L) //Comentario existente, pero post no
+                Arguments.arguments(0L, 1L),
+                Arguments.arguments(0L, 0L)//Comentario existente, pero post no
         );
     }
 
