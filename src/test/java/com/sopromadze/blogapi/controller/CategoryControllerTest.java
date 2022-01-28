@@ -76,14 +76,18 @@ class CategoryControllerTest {
     Category category;
     Page<Category> resultado;
     PagedResponse<Category> categoryPagedResponse;
+    List<Category> listaCategorias;
 
     @BeforeEach
     void setUp() {
+
         category = Category.builder()
                 .id(1L)
                 .name("categoria")
                 .posts(new ArrayList<>())
                 .build();
+
+        listaCategorias.add(category);
 
         resultado = new PageImpl<>(Arrays.asList(category));
         categoryPagedResponse = new PagedResponse<>();
@@ -105,6 +109,7 @@ class CategoryControllerTest {
         MvcResult result = mockMvc.perform(get("/api/categories"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id", is(1)))
+                .andExpect(content().json(objectMapper.writeValueAsString(listaCategorias)))
                 .andReturn();
     }
 }
