@@ -4,6 +4,7 @@ import com.sopromadze.blogapi.model.role.Role;
 import com.sopromadze.blogapi.model.role.RoleName;
 import com.sopromadze.blogapi.model.user.Company;
 import com.sopromadze.blogapi.model.user.User;
+import com.sopromadze.blogapi.security.UserPrincipal;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
@@ -21,7 +22,7 @@ import java.util.*;
 @TestConfiguration
 public class SpringSecurityTestWebConfig {
 
-    @Bean("CustomUserDetailsServiceImpl")
+    @Bean("customUserDetailsService")
     @Primary
     public UserDetailsService userDetailsService(){
 
@@ -69,7 +70,10 @@ public class SpringSecurityTestWebConfig {
                 .roles(Arrays.asList(roleUser))
                 .build();
 
-        return new InMemoryUserDetailsManager(List.of(admin,user));
+        UserPrincipal userPrincipal = UserPrincipal.create(user);
+        UserPrincipal adminPrincipal = UserPrincipal.create(admin);
+
+        return new InMemoryUserDetailsManager(Arrays.asList(userPrincipal,adminPrincipal));
     }
 
 }
