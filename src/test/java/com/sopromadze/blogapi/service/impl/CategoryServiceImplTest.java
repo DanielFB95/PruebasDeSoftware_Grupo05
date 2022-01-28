@@ -42,9 +42,6 @@ class CategoryServiceImplTest {
     @InjectMocks
     private CategoryServiceImpl categoryServiceImpl;
 
-    @Mock
-    private TestEntityManager testEntityManager;
-
     Category category;
     List <Post> postsList;
     ResponseEntity<Category> categoryResponseEntityOK;
@@ -165,7 +162,7 @@ class CategoryServiceImplTest {
 
 
         when(categoryRepository.findById(any(Long.class))).thenReturn(Optional.of(category));
-        assertEquals(category, categoryRepository.findById(1L));
+        assertEquals(Optional.of(category), categoryRepository.findById(1L));
 
 
     }
