@@ -21,7 +21,7 @@ import java.util.Arrays;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class PhotoRepositoryTest {
 
-    @MockBean
+    @Autowired
     private PhotoRepository photoRepository;
 
     @Autowired
