@@ -1,12 +1,14 @@
 package com.sopromadze.blogapi.service.impl;
 
 import com.sopromadze.blogapi.exception.ResourceNotFoundException;
+import com.sopromadze.blogapi.exception.UnauthorizedException;
 import com.sopromadze.blogapi.model.Category;
 import com.sopromadze.blogapi.model.Post;
 import com.sopromadze.blogapi.model.role.Role;
 import com.sopromadze.blogapi.model.role.RoleName;
 import com.sopromadze.blogapi.model.user.Company;
 import com.sopromadze.blogapi.model.user.User;
+import com.sopromadze.blogapi.payload.PagedResponse;
 import com.sopromadze.blogapi.repository.CategoryRepository;
 import com.sopromadze.blogapi.security.UserPrincipal;
 import org.apache.tomcat.util.digester.ArrayStack;
@@ -21,11 +23,17 @@ import org.modelmapper.Converters;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import static org.mockito.Mockito.*;
+
+import org.springframework.data.domain.Pageable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -49,7 +57,6 @@ class CategoryServiceImplTest {
     ResponseEntity<Category> categoryResponseEntityCREATED;
     Role roleAdmin;
     Role roleUser;
-    List<Role> listaRoles;
     Company company;
     User user;
     User userAdmin;
@@ -58,6 +65,11 @@ class CategoryServiceImplTest {
     Post post;
     List<Post> nuevaListaPosts;
     Category categoriaModificada;
+    UserPrincipal userNotOwnerPrincipal;
+    Pageable pageable;
+    Page<Category> pageContentCategory;
+    PagedResponse<Category> pagedResponse;
+    List<Category>listaCategorias;
 
     @BeforeEach
     void init(){
@@ -165,6 +177,35 @@ class CategoryServiceImplTest {
                 .build();
 
         nuevaListaPosts = new ArrayList<>();
+
+        userNotOwnerPrincipal = UserPrincipal.builder()
+                .id(100L)
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .password(user.getPassword())
+                .authorities(new ArrayList<>())
+                .build();
+
+        listaCategorias = new ArrayList<>();
+        listaCategorias.add(category);
+
+        pageable = PageRequest.of(1,1);
+        pageContentCategory = new PageImpl<>(Arrays.asList(category));
+        pagedResponse = new PagedResponse<Category>(listaCategorias,pageContentCategory.getNumber()
+                ,pageContentCategory.getSize(),pageContentCategory.getTotalElements()
+                ,pageContentCategory.getTotalPages(),pageContentCategory.isLast());
+
+
+    }
+
+    @Test
+    @DisplayName("geAllCategories funciona correctamente")
+    void getAllCategories_succes(){
+
+    when(categoryRepository.findAll(any(Pageable.class))).thenReturn(pageContentCategory);
+    assertEquals(pagedResponse,categoryServiceImpl.getAllCategories(1,1));
     }
 
     @Test
@@ -230,6 +271,14 @@ class CategoryServiceImplTest {
         category.setPosts(categoriaModificada.getPosts());
         when(categoryRepository.save(any())).thenReturn(category);
         assertEquals(1,categoryServiceImpl.updateCategory(1L, category,adminPrincipal).getBody().getPosts().size());
+    }
+
+    @Test
+    @DisplayName("updateCategory Unauthorized Exception funciona correctamente")
+    void updateCategory_UnauthorizedException(){
+
+        when(categoryRepository.findById(any(Long.class))).thenReturn(Optional.of(category));
+        assertThrows(UnauthorizedException.class, () -> categoryServiceImpl.updateCategory(1L,category, userNotOwnerPrincipal));
     }
 
     @Test
