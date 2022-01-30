@@ -4,6 +4,7 @@ import com.sopromadze.blogapi.model.Album;
 import com.sopromadze.blogapi.model.Photo;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -62,6 +63,7 @@ class PhotoRepositoryTest {
     }
 
     @Test
+    @DisplayName("findByAlbumId funciona correctamente")
     void findByAlbumId_success() {
 
         when(photoRepository.findByAlbumId(any(Long.class),any(Pageable.class))).thenReturn(paginaPhotos);
