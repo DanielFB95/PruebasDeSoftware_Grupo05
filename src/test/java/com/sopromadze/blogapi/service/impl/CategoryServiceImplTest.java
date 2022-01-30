@@ -23,6 +23,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import static org.mockito.Mockito.*;
 import java.util.ArrayList;
@@ -42,9 +43,6 @@ class CategoryServiceImplTest {
     @InjectMocks
     private CategoryServiceImpl categoryServiceImpl;
 
-    @Mock
-    private TestEntityManager testEntityManager;
-
     Category category;
     List <Post> postsList;
     ResponseEntity<Category> categoryResponseEntityOK;
@@ -56,9 +54,23 @@ class CategoryServiceImplTest {
     User user;
     User userAdmin;
     UserPrincipal userPrincipal;
+    UserPrincipal adminPrincipal;
+    Post post;
+    List<Post> nuevaListaPosts;
+    Category categoriaModificada;
 
     @BeforeEach
     void init(){
+
+        post = Post.builder()
+                .id(1L)
+                .title("post")
+                .body("cuerpo del post")
+                .user(user)
+                .category(category)
+                .comments(new ArrayList<>())
+                .tags(new ArrayList<>())
+                .build();
 
         postsList = new ArrayList<>();
 
@@ -132,8 +144,27 @@ class CategoryServiceImplTest {
                 .authorities(new ArrayList<>())
                 .build();
 
+        adminPrincipal = UserPrincipal.builder()
+                .id(10L)
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .username(user.getUsername())
+                .email(user.getEmail())
+                .password(user.getPassword())
+                .authorities(Arrays.asList(new SimpleGrantedAuthority(RoleName.ROLE_ADMIN.toString())))
+                .build();
+
+        category.setCreatedBy(1L);
+
         categoryResponseEntityOK = ResponseEntity.ok().body(category);
         categoryResponseEntityCREATED = ResponseEntity.status(HttpStatus.CREATED).body(category);
+
+        categoriaModificada = Category.builder()
+                .name("Nueva Categoria")
+                .posts(nuevaListaPosts)
+                .build();
+
+        nuevaListaPosts = new ArrayList<>();
     }
 
     @Test
@@ -175,5 +206,37 @@ class CategoryServiceImplTest {
     void updateCategory_Exception(){
 
         assertThrows(ResourceNotFoundException.class, () -> categoryServiceImpl.updateCategory(null,category,userPrincipal));
+    }
+
+    @Test
+    @DisplayName("updateCategory funciona correctamente con el usuario que la creó")
+    void updateCategory_succesUserOwner(){
+
+        nuevaListaPosts.add(post);
+        when(categoryRepository.findById(any(Long.class))).thenReturn(Optional.of(category));
+        category.setName(categoriaModificada.getName());
+        category.setPosts(categoriaModificada.getPosts());
+        when(categoryRepository.save(any())).thenReturn(category);
+        assertEquals(1,categoryServiceImpl.updateCategory(1L, category,userPrincipal).getBody().getPosts().size());
+    }
+
+    @Test
+    @DisplayName("updateCategory funciona correctamente con un administrador")
+    void updateCategory_succesUserAdmin(){
+
+        nuevaListaPosts.add(post);
+        when(categoryRepository.findById(any(Long.class))).thenReturn(Optional.of(category));
+        category.setName(categoriaModificada.getName());
+        category.setPosts(categoriaModificada.getPosts());
+        when(categoryRepository.save(any())).thenReturn(category);
+        assertEquals(1,categoryServiceImpl.updateCategory(1L, category,adminPrincipal).getBody().getPosts().size());
+    }
+
+    @Test
+    @DisplayName("")
+    void deleteCategory(){
+
+
+
     }
 }
