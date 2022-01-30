@@ -202,10 +202,11 @@ class CategoryServiceImplTest {
 
     @Test
     @DisplayName("geAllCategories funciona correctamente")
-    void getAllCategories_succes(){
+    void getAllCategories_success(){
 
     when(categoryRepository.findAll(any(Pageable.class))).thenReturn(pageContentCategory);
     assertEquals(pagedResponse,categoryServiceImpl.getAllCategories(1,1));
+
     }
 
     @Test
@@ -283,9 +284,9 @@ class CategoryServiceImplTest {
 
     @Test
     @DisplayName("")
-    void deleteCategory(){
+    void deleteCategory_succesUserOwner(){
 
-
-
+        when(categoryRepository.findById(any(Long.class))).thenReturn(Optional.of(category));
+  
     }
 }
