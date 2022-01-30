@@ -12,8 +12,13 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 import java.util.Arrays;
+
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 
 @DataJpaTest
@@ -21,7 +26,7 @@ import java.util.Arrays;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class PhotoRepositoryTest {
 
-    @Autowired
+    @MockBean
     private PhotoRepository photoRepository;
 
     @Autowired
@@ -29,14 +34,16 @@ class PhotoRepositoryTest {
 
     Photo foto;
     Album album;
-    Page<Album> paginaPhotos;
+    Page<Photo> paginaPhotos;
+    Pageable pageable;
 
     @BeforeEach
     void setUp() {
 
-        album = new Album();
-        album.setId(1L);
-        album.setTitle("album");
+        album = Album.builder()
+                .id(1L)
+                .title("Album")
+                .build();
 
         foto = Photo.builder()
                 .id(1L)
@@ -48,15 +55,16 @@ class PhotoRepositoryTest {
 
         album.setPhoto(Arrays.asList(foto));
 
-        paginaPhotos = new PageImpl<>(Arrays.asList(album));
+        paginaPhotos = new PageImpl<>(Arrays.asList(foto));
 
+        pageable = PageRequest.of(1,1);
 
     }
 
     @Test
     void findByAlbumId_success() {
 
-
-
+        when(photoRepository.findByAlbumId(any(Long.class),any(Pageable.class))).thenReturn(paginaPhotos);
+        assertEquals(Arrays.asList(foto),photoRepository.findByAlbumId(1L,pageable).getContent());
     }
 }
