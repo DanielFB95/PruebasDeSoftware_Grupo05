@@ -11,7 +11,6 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.commons.logging.LoggerFactory;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -29,8 +28,7 @@ import static org.mockito.ArgumentMatchers.any;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.test.web.servlet.MvcResult;
-
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.List;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
@@ -176,10 +174,14 @@ class CategoryControllerTest {
     void deleteCategory_success() throws Exception{
 
         when(categoryService.deleteCategory(any(Long.class),ArgumentMatchers.any())).thenReturn(apiResponseResponseEntity);
-        String requestResult = mockMvc.perform(delete("/api/categories/{id}",category1.getId()))
-                .andExpect(status().isOk()).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        MvcResult requestResult = mockMvc.perform(delete("/api/categories/{id}",category1.getId()))
+                .andExpect(status().isOk()).andExpect(status().isOk()).andReturn();
+
+        //ApiResponse result = requestResult.getResponse().getHeader();
+        //assertEquals(apiResponse.getMessage(), result);
+
         //Collection<String> result = requestResult.getResponse().getHeaderNames();
-        LoggerFactory.getLogger(CategoryControllerTest.class).info(requestResult);
+        //LoggerFactory.getLogger(CategoryControllerTest.class).info(requestResult);
         //assertEquals(apiResponse.getMessage(), result);
 
     }
