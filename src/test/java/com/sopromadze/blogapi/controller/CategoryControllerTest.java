@@ -100,7 +100,7 @@ class CategoryControllerTest {
     }
 
     @Test
-    @WithUserDetails("admin")
+    @WithUserDetails("adminPrincipal")
     @DisplayName("GET  all Categories funciona correctamente")
 
     void getCategoryController_success() throws Exception{
