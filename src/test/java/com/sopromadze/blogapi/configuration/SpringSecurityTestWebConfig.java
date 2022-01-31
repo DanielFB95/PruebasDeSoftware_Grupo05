@@ -70,8 +70,6 @@ public class SpringSecurityTestWebConfig {
                 .roles(Arrays.asList(roleUser))
                 .build();
 
-        new SimpleGrantedAuthority(RoleName.ROLE_ADMIN.toString());
-
         UserPrincipal userPrincipal = UserPrincipal.create(user);
         UserPrincipal adminPrincipal = UserPrincipal.create(admin);
 
