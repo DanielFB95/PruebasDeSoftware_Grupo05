@@ -221,6 +221,7 @@ class AlbumServiceImplTest {
         when(userRepository.getUser(userPrincipal)).thenReturn(user);
 
         album.setTitle(newAlbum.getTitle());
+
         when(albumRepository.save(album)).thenReturn(album);
 
 
@@ -237,7 +238,7 @@ class AlbumServiceImplTest {
         //assertEquals(albumResponse.getTitle(), albumService.updateAlbum(2L, newAlbum,userPrincipal).getBody().getTitle());
     }
 
-    /*@Test
+    @Test
     void updateAlbumUnauthorized_blogApiException() {
 
 
@@ -249,13 +250,17 @@ class AlbumServiceImplTest {
         newAlbum.setCreatedAt(Instant.now());
         newAlbum.setUpdatedAt(Instant.now());
 
+
         when(albumRepository.findById(any(Long.class))).thenReturn(Optional.of(album));
+        when(userRepository.getUser(userPrincipal)).thenReturn(user);
+        when(modelMapper.map(any(),any())).thenReturn(album);
+        when(albumRepository.save(album)).thenReturn(album);
 
         newAlbum.setTitle(album.getTitle());
 
         assertThrows(BlogapiException.class, () -> albumService.updateAlbum(album.getId(),newAlbum, anotherUserPrincipal));
 
-    }*/
+    }
 
 
 }
