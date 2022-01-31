@@ -7,31 +7,38 @@ import com.sopromadze.blogapi.model.role.RoleName;
 import com.sopromadze.blogapi.model.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
 import static org.mockito.Mockito.*;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.ActiveProfiles;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
+@ActiveProfiles("test")
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 class UserRepositoryTest {
 
-    @MockBean
+    @Autowired
     UserRepository userRepository;
 
-    @MockBean
-    TestEntityManager testEntityManager;
+    @Autowired
+    private TestEntityManager testEntityManager;
 
     User user;
 
     @BeforeEach
     void setUp() {
         user = User.builder()
-                .id(1L)
                 .firstName("Juan")
                 .lastName("Gutierrez")
                 .username("Juanguti")
@@ -43,15 +50,20 @@ class UserRepositoryTest {
 
         user.getRoles().add(new Role(RoleName.ROLE_USER));
 
+        user.setCreatedAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
+
+
+
+
     }
 
 
     @Test
     void findByUsernameOrEmail_success() {
 
-        when(userRepository.findByUsernameOrEmail(user.getUsername(), user.getEmail())).thenReturn(Optional.of(user));
-
-        assertEquals(Optional.of(user), userRepository.findByUsernameOrEmail(user.getUsername(), ""));
+        testEntityManager.persist(user);
+        assertEquals(Optional.of(user), userRepository.findByUsernameOrEmail(user.getUsername(), user.getEmail()));
 
 
     }
