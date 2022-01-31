@@ -21,7 +21,6 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "categories")

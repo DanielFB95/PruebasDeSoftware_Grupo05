@@ -18,11 +18,8 @@ import javax.persistence.Table;
 @Builder
 @Entity
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-@AllArgsConstructor
 @Table(name = "roles")
-@Builder
 public class Role {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
