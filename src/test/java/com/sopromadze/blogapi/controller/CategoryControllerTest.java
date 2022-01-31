@@ -2,39 +2,41 @@ package com.sopromadze.blogapi.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sopromadze.blogapi.config.SpringSecurityTestConfig;
 import com.sopromadze.blogapi.model.Category;
-import com.sopromadze.blogapi.model.user.User;
+import com.sopromadze.blogapi.payload.ApiResponse;
 import com.sopromadze.blogapi.payload.PagedResponse;
 import com.sopromadze.blogapi.security.UserPrincipal;
 import com.sopromadze.blogapi.service.CategoryService;
 import lombok.extern.java.Log;
-import net.minidev.json.writer.ArraysMapper;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.logging.LoggerFactory;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.HttpStatus;
+
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.security.test.context.support.WithUserDetails;
+
 import org.springframework.test.web.servlet.MockMvc;
+
 import java.util.ArrayList;
 import static org.mockito.ArgumentMatchers.any;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.test.web.servlet.MvcResult;
-import java.util.Arrays;
+
+import java.util.Collection;
 import java.util.List;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes ={SpringSecurityTestConfig.class} )
@@ -57,6 +59,8 @@ class CategoryControllerTest {
     List<Category> listaCategorias;
     UserPrincipal user;
     ResponseEntity<Category> categoryResponseEntity;
+    ApiResponse apiResponse;
+    ResponseEntity<ApiResponse> apiResponseResponseEntity;
 
     @BeforeEach
     void setUp() {
@@ -97,6 +101,12 @@ class CategoryControllerTest {
 
         categoryResponseEntity = ResponseEntity.ok().body(category1);
 
+        apiResponse = ApiResponse.builder()
+                .message("Categoria eliminada")
+                .build();
+
+        apiResponseResponseEntity = ResponseEntity.ok().body(apiResponse);
+
     }
 
     @Test
@@ -111,6 +121,8 @@ class CategoryControllerTest {
                 .andExpect(jsonPath("$.content[0].id", is(1)))
                 .andExpect(jsonPath("$.content[1].id", is(2)))
                 .andReturn();
+
+        //.param("student-id", "1")
     }
 
     @Test
@@ -126,7 +138,7 @@ class CategoryControllerTest {
 
     @Test
     //@WithMockUser("admin")
-    @DisplayName("POST añadir categoria con un usuario no válido da error")
+    @DisplayName("POST añadir categoria con un usuario no válido y da error 401")
     void addCategory_Unauthorized() throws Exception{
 
         mockMvc.perform(post("/api/categories").contentType(MediaType.APPLICATION_JSON).characterEncoding("utf-8")
@@ -154,13 +166,21 @@ class CategoryControllerTest {
 
         when(categoryService.updateCategory(any(Long.class),ArgumentMatchers.any(),ArgumentMatchers.any())).thenReturn(categoryResponseEntity);
         mockMvc.perform(put("/api/categories/{id}",category1.getId()).contentType(MediaType.APPLICATION_JSON).characterEncoding("utf-8")
-                        .content(objectMapper.writeValueAsString(category1)).accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", Matchers.equalTo(1)))
-                .andExpect(jsonPath("$.name", Matchers.equalTo("categoria")));
+                        .content(objectMapper.writeValueAsString(category1)).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
-    void deleteCategory_success(){
+    @WithMockUser("admin")
+    @DisplayName("DELETE elimina una categoria por id con un usuario valido")
+    void deleteCategory_success() throws Exception{
+
+        when(categoryService.deleteCategory(any(Long.class),ArgumentMatchers.any())).thenReturn(apiResponseResponseEntity);
+        String requestResult = mockMvc.perform(delete("/api/categories/{id}",category1.getId()))
+                .andExpect(status().isOk()).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        //Collection<String> result = requestResult.getResponse().getHeaderNames();
+        LoggerFactory.getLogger(CategoryControllerTest.class).info(requestResult);
+        //assertEquals(apiResponse.getMessage(), result);
 
     }
 }
