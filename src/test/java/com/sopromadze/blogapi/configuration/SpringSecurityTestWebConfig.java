@@ -11,13 +11,18 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
 import java.util.*;
 
 @TestConfiguration
 public class SpringSecurityTestWebConfig {
 
-    @Bean("customUserDetailsServiceImpl")
+    @Bean("customUserDetailsService")
     @Primary
     public UserDetailsService userDetailsService(){
 
@@ -65,30 +70,13 @@ public class SpringSecurityTestWebConfig {
                 .roles(Arrays.asList(roleUser))
                 .build();
 
-        UserPrincipal userPrincipal = UserPrincipal.builder()
-                .id(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .username(user.getUsername())
-                .password(user.getPassword())
-                .email(user.getEmail())
-                .authorities(Arrays.asList(new SimpleGrantedAuthority(RoleName.ROLE_USER.toString())))
-                .build();
-
-        UserPrincipal adminPrincipal = UserPrincipal.builder()
-                .id(admin.getId())
-                .firstName(admin.getFirstName())
-                .lastName(admin.getLastName())
-                .username(admin.getUsername())
-                .password(admin.getPassword())
-                .email(admin.getEmail())
-                .authorities(Arrays.asList(new SimpleGrantedAuthority(RoleName.ROLE_USER.toString())))
-                .build();
-
         new SimpleGrantedAuthority(RoleName.ROLE_ADMIN.toString());
 
+        UserPrincipal userPrincipal = UserPrincipal.create(user);
+        UserPrincipal adminPrincipal = UserPrincipal.create(admin);
 
-        return new InMemoryUserDetailsManager(List.of(userPrincipal, adminPrincipal));
+        return new InMemoryUserDetailsManager(Arrays.asList(userPrincipal,adminPrincipal));
+
     }
 
 }
