@@ -1,17 +1,12 @@
 package com.sopromadze.blogapi.repository;
 
-import com.sopromadze.blogapi.exception.ResourceNotFoundException;
-import com.sopromadze.blogapi.model.Comment;
-import com.sopromadze.blogapi.model.Post;
 import com.sopromadze.blogapi.model.role.Role;
 import com.sopromadze.blogapi.model.role.RoleName;
 import com.sopromadze.blogapi.model.user.User;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.mockito.Mockito.*;
-
+import com.sopromadze.blogapi.exception.ResourceNotFoundException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -19,15 +14,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.context.ActiveProfiles;
 
+
+
+import org.springframework.test.context.ActiveProfiles;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Optional;
+import static org.junit.jupiter.api.Assertions.*;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.*;
+
 
 @DataJpaTest
 @ActiveProfiles("test")
@@ -35,10 +32,13 @@ import static org.junit.jupiter.api.Assertions.*;
 class UserRepositoryTest {
 
     @Autowired
-    UserRepository userRepository;
+
+     UserRepository userRepository;
 
     @Autowired
-    private TestEntityManager testEntityManager;
+     TestEntityManager testEntityManager;
+
+
 
     User user;
 
@@ -105,6 +105,14 @@ class UserRepositoryTest {
     void getUserByName_ThrowExceptionNotFound(){
 
         assertThrows(ResourceNotFoundException.class, () -> userRepository.getUserByName("userNoExistente"));
+    }
+
+    @Test
+    void whenFoundUser_existsByEmail_success() {
+
+        //when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+        assertTrue(userRepository.existsByEmail(user.getEmail()));
+
     }
 
 

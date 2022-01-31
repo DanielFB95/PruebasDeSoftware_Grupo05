@@ -33,6 +33,8 @@ import java.util.Collections;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
+@Builder
+@AllArgsConstructor
 @Entity
 @Data
 @NoArgsConstructor
