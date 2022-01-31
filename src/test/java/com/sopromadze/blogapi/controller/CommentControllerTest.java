@@ -13,11 +13,11 @@ import com.sopromadze.blogapi.payload.PagedResponse;
 import com.sopromadze.blogapi.security.UserPrincipal;
 import com.sopromadze.blogapi.service.CommentService;
 
+import com.sopromadze.blogapi.service.impl.CommentServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.mockito.Mockito.*;
 
 import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +28,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -38,6 +39,7 @@ import java.util.Arrays;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
+import static org.mockito.Mockito.*;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -53,6 +55,8 @@ class CommentControllerTest {
 
     @MockBean
     private CommentService commentService;
+
+    static String REQUEST_MAPPING = "/api/posts/{postId}/comments";
 
     User user;
     Comment comment;
@@ -120,7 +124,7 @@ class CommentControllerTest {
         result.setSize(1);
 
 
-        mockMvc.perform(get("/api/posts/{postId}/comments", post.getId())
+        mockMvc.perform(get(REQUEST_MAPPING, post.getId())
                         .contentType("application/json")
                         .param("page", "1")
                         .param("size", "1")
@@ -145,7 +149,7 @@ class CommentControllerTest {
                 .email(user.getEmail())
                 .post(post).build();
 
-        mockMvc.perform(post("/api/posts/{postId}/comments", post.getId())
+        mockMvc.perform(post(REQUEST_MAPPING, post.getId())
                         .contentType("application/json")
                         .param("commentRequest", "newBodyComment")
                         .content(objectMapper.writeValueAsString(newComment)))
@@ -162,7 +166,7 @@ class CommentControllerTest {
         CommentRequest newBodyComment = new CommentRequest();
         newBodyComment.setBody("Nuevo texto para el comentario editado");
 
-        mockMvc.perform(put("/api/posts/{postId}/comments/{id}", post.getId(), comment.getId())
+        mockMvc.perform(put(REQUEST_MAPPING + "/{id}", post.getId(), comment.getId())
                         .contentType("application/json")
                         .param("commentRequest", "newBodyComment")
                         .content(objectMapper.writeValueAsString(comment)))
@@ -170,16 +174,16 @@ class CommentControllerTest {
 
     }
 
-    //TODO: Solucionar este método
+    //TODO: Solucionar este método. Devuelve NullPointerException debido a que "response" es null.
     @Test
     @DisplayName("DELETE / COMMENT devolviendo 200")
     @WithUserDetails(value = "user", userDetailsServiceBeanName = "customUserDetailsService")
     void deleteComment_returns200_success() throws Exception {
 
         ApiResponse response = new ApiResponse(Boolean.TRUE, "You successfully deleted comment");
-        //lenient().when(commentService.deleteComment(post.getId(), comment.getId(), userPrincipal)).thenReturn(response);
 
-        mockMvc.perform(delete("/api/posts/{postId}/comments/{id}", post.getId(), comment.getId())
+
+        mockMvc.perform(delete(REQUEST_MAPPING + "{id}", post.getId(), comment.getId())
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(response)))
                 .andExpect(status().isOk());
