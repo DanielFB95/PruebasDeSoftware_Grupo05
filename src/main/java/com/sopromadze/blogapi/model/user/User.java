@@ -32,11 +32,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Builder
 @EqualsAndHashCode(callSuper = true)
 @Builder
 @AllArgsConstructor
 @Entity
 @Data
+@AllArgsConstructor
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
