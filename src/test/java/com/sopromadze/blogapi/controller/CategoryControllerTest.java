@@ -98,7 +98,7 @@ class CategoryControllerTest {
     @Test
     @WithUserDetails("admin")
     @DisplayName("GET  all Categories funciona correctamente")
-    void getCategoryController_success(){
+    void getCategoryController_success()  throws Exception{
 
         when(categoryService.getAllCategories(any(Integer.class),any(Integer.class))).thenReturn(categoryPagedResponse);
 

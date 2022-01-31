@@ -4,10 +4,11 @@ import com.sopromadze.blogapi.model.role.Role;
 import com.sopromadze.blogapi.model.role.RoleName;
 import com.sopromadze.blogapi.model.user.Company;
 import com.sopromadze.blogapi.model.user.User;
+import com.sopromadze.blogapi.security.UserPrincipal;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
-import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 
@@ -64,7 +65,30 @@ public class SpringSecurityTestWebConfig {
                 .roles(Arrays.asList(roleUser))
                 .build();
 
-        return new InMemoryUserDetailsManager(List.of(admin,user));
+        UserPrincipal userPrincipal = UserPrincipal.builder()
+                .id(user.getId())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .email(user.getEmail())
+                .authorities(Arrays.asList(new SimpleGrantedAuthority(RoleName.ROLE_USER.toString())))
+                .build();
+
+        UserPrincipal adminPrincipal = UserPrincipal.builder()
+                .id(admin.getId())
+                .firstName(admin.getFirstName())
+                .lastName(admin.getLastName())
+                .username(admin.getUsername())
+                .password(admin.getPassword())
+                .email(admin.getEmail())
+                .authorities(Arrays.asList(new SimpleGrantedAuthority(RoleName.ROLE_USER.toString())))
+                .build();
+
+        new SimpleGrantedAuthority(RoleName.ROLE_ADMIN.toString());
+
+
+        return new InMemoryUserDetailsManager(List.of(userPrincipal, adminPrincipal));
     }
 
 }
