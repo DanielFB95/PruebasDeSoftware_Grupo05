@@ -3,8 +3,7 @@ package com.sopromadze.blogapi.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sopromadze.blogapi.model.audit.UserDateAudit;
 import com.sopromadze.blogapi.model.user.User;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -23,6 +22,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Data

@@ -23,6 +23,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "categories")
 @JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class Category extends UserDateAudit {
