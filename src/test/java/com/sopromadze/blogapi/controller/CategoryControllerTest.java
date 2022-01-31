@@ -2,16 +2,25 @@ package com.sopromadze.blogapi.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sopromadze.blogapi.config.SpringSecurityTestConfig;
 import com.sopromadze.blogapi.model.Category;
+import com.sopromadze.blogapi.model.user.User;
 import com.sopromadze.blogapi.payload.PagedResponse;
+import com.sopromadze.blogapi.security.UserPrincipal;
 import com.sopromadze.blogapi.service.CategoryService;
 import lombok.extern.java.Log;
+import net.minidev.json.writer.ArraysMapper;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
 import java.util.ArrayList;
@@ -21,10 +30,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.test.web.servlet.MvcResult;
 import java.util.Arrays;
 import java.util.List;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes ={SpringSecurityTestConfig.class} )
 @AutoConfigureMockMvc
@@ -40,23 +51,39 @@ class CategoryControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    Category category;
+    Category category1, category2, newCategory;
     Page<Category> resultado;
     PagedResponse<Category> categoryPagedResponse;
     List<Category> listaCategorias;
+    UserPrincipal user;
+    ResponseEntity<Category> categoryResponseEntity;
 
     @BeforeEach
     void setUp() {
 
-        category = Category.builder()
+        category1 = Category.builder()
                 .id(1L)
                 .name("categoria")
                 .posts(new ArrayList<>())
                 .build();
 
-        listaCategorias.add(category);
+        category2 = Category.builder()
+                .id(2L)
+                .name("categoria2")
+                .posts(new ArrayList<>())
+                .build();
 
-        resultado = new PageImpl<>(Arrays.asList(category));
+        newCategory = Category.builder()
+                .id(3L)
+                .name("nuevaCategoria")
+                .posts(new ArrayList<>())
+                .build();
+
+        listaCategorias = new ArrayList<>();
+        listaCategorias.add(category1);
+        listaCategorias.add(category2);
+
+        resultado = new PageImpl<>(listaCategorias);
         categoryPagedResponse = new PagedResponse<>();
         categoryPagedResponse.setContent(resultado.getContent());
         categoryPagedResponse.setTotalPages(1);
@@ -64,20 +91,76 @@ class CategoryControllerTest {
         categoryPagedResponse.setSize(1);
         categoryPagedResponse.setLast(true);
 
+        user = UserPrincipal.builder()
+                .id(1L)
+                .build();
+
+        categoryResponseEntity = ResponseEntity.ok().body(category1);
+
     }
 
     @Test
-    @WithUserDetails("admin")
-    @DisplayName("GET  all Categories funciona correctamente")
-
+    @DisplayName("GET  traer todas la categorias funciona correctamente")
     void getCategoryController_success() throws Exception{
 
         when(categoryService.getAllCategories(any(Integer.class),any(Integer.class))).thenReturn(categoryPagedResponse);
 
-        MvcResult result = mockMvc.perform(get("/api/categories"))
+        mockMvc.perform(get("/api/categories").contentType(MediaType.APPLICATION_JSON)
+                        .characterEncoding("utf-8").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id", is(1)))
-                .andExpect(content().json(objectMapper.writeValueAsString(listaCategorias)))
+                .andExpect(jsonPath("$.content[1].id", is(2)))
                 .andReturn();
+    }
+
+    @Test
+    @WithMockUser("user")
+    @DisplayName("POST añadir una categoria funciona correctamente")
+    void addCategory_success() throws Exception{
+
+        mockMvc.perform(post("/api/categories").contentType(MediaType.APPLICATION_JSON).characterEncoding("utf-8")
+                        .content(objectMapper.writeValueAsString(category1)).accept(MediaType.APPLICATION_JSON)).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", Matchers.equalTo(1)))
+                .andExpect(jsonPath("$.name", Matchers.equalTo("categoria")));
+    }
+
+    @Test
+    //@WithMockUser("admin")
+    @DisplayName("POST añadir categoria con un usuario no válido da error")
+    void addCategory_Unauthorized() throws Exception{
+
+        mockMvc.perform(post("/api/categories").contentType(MediaType.APPLICATION_JSON).characterEncoding("utf-8")
+                        .content(objectMapper.writeValueAsString(category1)).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isUnauthorized());
+
+    }
+
+    @Test
+    @WithMockUser("admin")
+    @DisplayName("PUT modifica una categoria con un usuario validado funciona correctamente")
+    void putCategory_success() throws  Exception{
+
+        when(categoryService.updateCategory(any(Long.class),ArgumentMatchers.any(),ArgumentMatchers.any())).thenReturn(categoryResponseEntity);
+        mockMvc.perform(put("/api/categories/{id}",category1.getId()).contentType(MediaType.APPLICATION_JSON).characterEncoding("utf-8")
+                        .content(objectMapper.writeValueAsString(category1)).accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", Matchers.equalTo(1)))
+                .andExpect(jsonPath("$.name", Matchers.equalTo("categoria")));
+    }
+
+    @Test
+    //@WithMockUser("admin")
+    @DisplayName("PUT modifica una categoria con un usuario no validado y da error 401")
+    void putCategory_Unauthorized() throws  Exception{
+
+        when(categoryService.updateCategory(any(Long.class),ArgumentMatchers.any(),ArgumentMatchers.any())).thenReturn(categoryResponseEntity);
+        mockMvc.perform(put("/api/categories/{id}",category1.getId()).contentType(MediaType.APPLICATION_JSON).characterEncoding("utf-8")
+                        .content(objectMapper.writeValueAsString(category1)).accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", Matchers.equalTo(1)))
+                .andExpect(jsonPath("$.name", Matchers.equalTo("categoria")));
+    }
+
+    @Test
+    void deleteCategory_success(){
+
     }
 }
