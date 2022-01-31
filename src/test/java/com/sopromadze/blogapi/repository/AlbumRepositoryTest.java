@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.when;
 
 @DataJpaTest
 @ActiveProfiles("test")
@@ -69,7 +70,7 @@ class AlbumRepositoryTest {
 
         pageRequest =  PageRequest.of(1,2);
 
-        Mockito.lenient().when(albumRepository.findByCreatedBy(user.getId(), pageRequest )).thenReturn(albums);
+        when(albumRepository.findByCreatedBy(user.getId(), pageRequest )).thenReturn(albums);
 
         assertNotEquals(0, albumRepository.findByCreatedBy(user.getId(), pageRequest).getTotalElements());
 

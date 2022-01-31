@@ -8,9 +8,7 @@ import com.sopromadze.blogapi.model.Comment;
 import com.sopromadze.blogapi.model.Post;
 import com.sopromadze.blogapi.model.role.Role;
 import com.sopromadze.blogapi.model.Todo;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.NaturalId;
 
 import javax.persistence.CascadeType;
@@ -35,6 +33,8 @@ import java.util.Collections;
 import java.util.List;
 
 @EqualsAndHashCode(callSuper = true)
+@Builder
+@AllArgsConstructor
 @Entity
 @Data
 @NoArgsConstructor

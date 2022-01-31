@@ -1,6 +1,10 @@
 package com.sopromadze.blogapi.service.impl;
 
+import com.sopromadze.blogapi.exception.BlogapiException;
+import com.sopromadze.blogapi.exception.ResourceNotFoundException;
 import com.sopromadze.blogapi.model.Album;
+import com.sopromadze.blogapi.model.role.Role;
+import com.sopromadze.blogapi.model.role.RoleName;
 import com.sopromadze.blogapi.model.user.User;
 import com.sopromadze.blogapi.payload.AlbumResponse;
 import com.sopromadze.blogapi.payload.PagedResponse;
@@ -13,17 +17,16 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
+
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
-import org.springframework.boot.test.mock.mockito.MockBean;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -50,14 +53,19 @@ class AlbumServiceImplTest {
     UserRepository userRepository;
 
 
+    private static final String ALBUM_STR = "album";
+    private static final String ID_STR = "id";
 
 
     Album album;
     AlbumResponse albumResponse;
     AlbumRequest albumRequest;
     User user;
-    UserPrincipal userPrincipal;
+    User admin;
+    User userRole;
+    UserPrincipal userPrincipal, userPrincipalUser, anotherUserPrincipal;
     ResponseEntity<AlbumResponse> albumResponseResponseEntity;
+    ResponseEntity<Album> albumResponseEntity;
 
 
 
@@ -95,7 +103,55 @@ class AlbumServiceImplTest {
 
         userPrincipal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getPassword(), new ArrayList<>());
 
+        admin = User.builder()
+                .id(3L)
+                .firstName("Pepe")
+                .lastName("Fernandez")
+                .username("PepeAdmin")
+                .password("1234al")
+                .email("admin@gmail.com")
+                .comments(new ArrayList<>())
+                .roles(new ArrayList<>())
+                .build();
 
+        admin.getRoles().add(new Role(RoleName.ROLE_ADMIN));
+
+        userRole = User.builder()
+                .id(10L)
+                .firstName("Pepa")
+                .lastName("Fernandez")
+                .username("PepaUser")
+                .password("1234al")
+                .email("user@gmail.com")
+                .comments(new ArrayList<>())
+                .roles(new ArrayList<>())
+                .build();
+
+        userRole.getRoles().add(new Role(RoleName.ROLE_USER));
+        userPrincipalUser = new UserPrincipal(userRole.getId(), userRole.getFirstName(), userRole.getLastName(), userRole.getUsername(), userRole.getEmail(), userRole.getPassword(),Arrays.asList(new SimpleGrantedAuthority(RoleName.ROLE_USER.toString())));
+        anotherUserPrincipal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getPassword(), new ArrayList<>());
+        }
+
+        @Test
+        void whenGetAlbum_success(){
+
+        when(albumRepository.findById(album.getId())).thenReturn(Optional.of(album));
+
+        albumResponseEntity = ResponseEntity.ok(album);
+        assertEquals(albumResponseEntity, albumService.getAlbum(album.getId()));
+
+
+        }
+
+        @Test
+        void whenGetAlbumNotFound_throwNotFoundException(){
+
+            Long idNull = 0L;
+
+            when(albumRepository.findById(idNull)).thenThrow(new ResourceNotFoundException(ALBUM_STR,ID_STR, idNull));
+            assertThrows(ResourceNotFoundException.class, () -> albumService.getAlbum(idNull));
+
+            //System.out.println( assertThrows(ResourceNotFoundException.class, () -> albumService.getAlbum(idNull)));
 
         }
 
@@ -148,7 +204,7 @@ class AlbumServiceImplTest {
     }
 
     @Test
-    void updateAlbum_success() {
+    void whenUpdateAlbum_success() {
 
 
         AlbumRequest newAlbum = new AlbumRequest();
@@ -179,15 +235,27 @@ class AlbumServiceImplTest {
 
         assertEquals(HttpStatus.OK, albumService.updateAlbum(album.getId(), newAlbum,userPrincipal).getStatusCode());
         //assertEquals(albumResponse.getTitle(), albumService.updateAlbum(2L, newAlbum,userPrincipal).getBody().getTitle());
-
-
-
-
-
-
-
-
-
     }
+
+    /*@Test
+    void updateAlbumUnauthorized_blogApiException() {
+
+
+        AlbumRequest newAlbum = new AlbumRequest();
+
+        newAlbum.setTitle("Album 4º");
+        newAlbum.setId(2L);
+        newAlbum.setUser(userRole);
+        newAlbum.setCreatedAt(Instant.now());
+        newAlbum.setUpdatedAt(Instant.now());
+
+        when(albumRepository.findById(any(Long.class))).thenReturn(Optional.of(album));
+
+        newAlbum.setTitle(album.getTitle());
+
+        assertThrows(BlogapiException.class, () -> albumService.updateAlbum(album.getId(),newAlbum, anotherUserPrincipal));
+
+    }*/
+
 
 }
