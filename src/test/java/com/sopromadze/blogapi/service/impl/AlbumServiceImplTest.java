@@ -18,7 +18,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.modelmapper.ModelMapper;
 
 import org.springframework.data.domain.Page;
@@ -38,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class AlbumServiceImplTest {
 
     @InjectMocks
@@ -237,7 +241,7 @@ class AlbumServiceImplTest {
         //assertEquals(albumResponse.getTitle(), albumService.updateAlbum(2L, newAlbum,userPrincipal).getBody().getTitle());
     }
 
-    /*@Test
+    @Test
     void updateAlbumUnauthorized_blogApiException() {
 
 
@@ -245,17 +249,24 @@ class AlbumServiceImplTest {
 
         newAlbum.setTitle("Album 4º");
         newAlbum.setId(2L);
-        newAlbum.setUser(userRole);
+        newAlbum.setUser(user);
         newAlbum.setCreatedAt(Instant.now());
         newAlbum.setUpdatedAt(Instant.now());
 
+
         when(albumRepository.findById(any(Long.class))).thenReturn(Optional.of(album));
+        when(userRepository.getUser(anotherUserPrincipal)).thenReturn(userRole);
+        when(albumRepository.save(any())).thenReturn(album);
+
+
+        when(modelMapper.map(any(),any())).thenReturn(album);
+
 
         newAlbum.setTitle(album.getTitle());
 
         assertThrows(BlogapiException.class, () -> albumService.updateAlbum(album.getId(),newAlbum, anotherUserPrincipal));
 
-    }*/
+    }
 
 
 }
