@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Test;
 
 
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,10 +30,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.web.servlet.MockMvc;
-
 
 
 import java.util.ArrayList;
@@ -94,7 +96,7 @@ class CommentControllerTest {
                 .comments(new ArrayList<>())
                 .build();
 
-        userPrincipal = UserPrincipal.builder()
+       /* userPrincipal = UserPrincipal.builder()
                 .id(1L)
                 .firstName(user.getFirstName())
                 .lastName(user.getLastName())
@@ -102,7 +104,8 @@ class CommentControllerTest {
                 .email(user.getEmail())
                 .password(user.getPassword())
                 .authorities(new ArrayList<>())
-                .build();
+                .build();*/
+        userPrincipal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getPassword(), Arrays.asList(new SimpleGrantedAuthority(RoleName.ROLE_USER.toString())));
 
         post.getComments().add(comment);
         user.getComments().add(comment);
@@ -174,18 +177,22 @@ class CommentControllerTest {
 
     }
 
-    //TODO: Solucionar este método. Devuelve NullPointerException debido a que "response" es null.
+    //TODO : Solucionar el problema de NullPointerException: "response is null"
     @Test
     @DisplayName("DELETE / COMMENT devolviendo 200")
     @WithUserDetails(value = "user", userDetailsServiceBeanName = "customUserDetailsService")
     void deleteComment_returns200_success() throws Exception {
 
         ApiResponse response = new ApiResponse(Boolean.TRUE, "You successfully deleted comment");
+        HttpStatus status = HttpStatus.OK;
 
 
-        mockMvc.perform(delete(REQUEST_MAPPING + "{id}", post.getId(), comment.getId())
-                .contentType("application/json")
-                .content(objectMapper.writeValueAsString(response)))
+        lenient().when(commentService.deleteComment(post.getId(), comment.getId(), userPrincipal)).thenReturn(response);
+
+        mockMvc.perform(delete(REQUEST_MAPPING + "/{id}", post.getId(), comment.getId())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(response))
+                )
                 .andExpect(status().isOk());
 
     }

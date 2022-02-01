@@ -6,6 +6,7 @@ import com.sopromadze.blogapi.model.role.Role;
 import com.sopromadze.blogapi.model.role.RoleName;
 import com.sopromadze.blogapi.model.user.User;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.*;
 
@@ -65,13 +66,16 @@ class CommentRepositoryTest {
                 .user(user)
                 .email(user.getEmail())
                 .build();
+        comment.setCreatedAt(Instant.now());
+        comment.setUpdatedAt(Instant.now());
 
         post = Post.builder()
                 .title("Mi viaje a las Bahamas")
                 .body("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum")
                 .comments(new ArrayList<>())
                 .build();
-
+        post.setCreatedAt(Instant.now());
+        post.setUpdatedAt(Instant.now());
 
 
         post.getComments().add(comment);
@@ -84,12 +88,15 @@ class CommentRepositoryTest {
 
     //TODO: Solucionar esta prueba (fallo de persistencia si uso persist())
     @Test
+    @DisplayName("Encontrar una lista paginada de comentarios en un post")
     void findByPostId_success() {
-
-
-       // Page<Comment> result = new PageImpl<>(Arrays.asList(comment));
+        testEntityManager.persist(user);
+        testEntityManager.persist(post);
+        testEntityManager.persist(comment);
+        testEntityManager.flush();
 
         Pageable pageable = PageRequest.of(0, 1);
+
 
         assertEquals(1L, commentRepository.findByPostId(comment.getId(), pageable).getTotalElements());
 
