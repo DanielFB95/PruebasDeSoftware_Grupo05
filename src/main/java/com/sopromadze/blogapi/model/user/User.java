@@ -32,12 +32,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@Builder
 @EqualsAndHashCode(callSuper = true)
+@Builder
+@AllArgsConstructor
 @Entity
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
+
 @Table(name = "users", uniqueConstraints = { @UniqueConstraint(columnNames = { "username" }),
 		@UniqueConstraint(columnNames = { "email" }) })
 public class User extends DateAudit {
