@@ -17,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -126,6 +127,8 @@ class CategoryControllerTest {
     @DisplayName("POST añadir una categoria funciona correctamente")
     void addCategory_success() throws Exception{
 
+        categoryResponseEntity = ResponseEntity.status(HttpStatus.CREATED).body(category1);
+        when(categoryService.addCategory(ArgumentMatchers.any(),ArgumentMatchers.any())).thenReturn(categoryResponseEntity);
         mockMvc.perform(post("/api/categories").contentType(MediaType.APPLICATION_JSON).characterEncoding("utf-8")
                         .content(objectMapper.writeValueAsString(category1)).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
