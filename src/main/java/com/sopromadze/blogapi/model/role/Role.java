@@ -19,7 +19,6 @@ import javax.persistence.Table;
 @AllArgsConstructor
 @Entity
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "roles")
 public class Role {

@@ -71,7 +71,7 @@ class UserControllerTest {
     @MockBean
     AlbumService albumService;
 
-    User user;
+    User user, admin;
     Album album;
     List<Album> albums;
     Address address;
@@ -110,6 +110,18 @@ class UserControllerTest {
 
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
+
+        admin = User.builder()
+                .firstName("Admin")
+                .lastName("El admin")
+                .username("eladmin")
+                .password("adminadmin")
+                .email("eladmin@gmail.com")
+                .comments(new ArrayList<>())
+                .roles(new ArrayList<>())
+                .build();
+
+        admin.getRoles().add(new Role(RoleName.ROLE_ADMIN));
 
             userPrincipal = UserPrincipal.builder()
                     .id(user.getId())
