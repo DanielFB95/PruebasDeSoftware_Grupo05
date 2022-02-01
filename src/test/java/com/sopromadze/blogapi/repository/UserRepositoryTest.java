@@ -3,6 +3,7 @@ package com.sopromadze.blogapi.repository;
 import com.sopromadze.blogapi.model.role.Role;
 import com.sopromadze.blogapi.model.role.RoleName;
 import com.sopromadze.blogapi.model.user.User;
+import com.sopromadze.blogapi.security.UserPrincipal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import com.sopromadze.blogapi.exception.ResourceNotFoundException;
@@ -40,7 +41,8 @@ class UserRepositoryTest {
 
 
 
-    User user;
+    User user, userNoExiste;
+    UserPrincipal userPrincipal, userPrincipalNoExiste;
 
     @BeforeEach
     void setUp() {
@@ -59,6 +61,10 @@ class UserRepositoryTest {
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
 
+        userNoExiste = new User();
+
+        userPrincipal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getPassword(), new ArrayList<>());
+        userPrincipalNoExiste = new UserPrincipal(userNoExiste.getId(), userNoExiste.getFirstName(), userNoExiste.getLastName(), userNoExiste.getUsername(), userNoExiste.getEmail(), userNoExiste.getPassword(), new ArrayList<>());
 
         testEntityManager.persist(user);
 
@@ -114,6 +120,19 @@ class UserRepositoryTest {
         assertTrue(userRepository.existsByEmail(user.getEmail()));
 
     }
+
+    @Test
+    void whenGetUser_success(){
+
+        assertEquals(user, userRepository.getUser(userPrincipal));
+    }
+
+    @Test
+    void whenGetUserNotFound_ThrowExceptionNotFound(){
+
+        assertThrows(ResourceNotFoundException.class, () -> userRepository.getUser(userPrincipalNoExiste));
+    }
+
 
 
 
