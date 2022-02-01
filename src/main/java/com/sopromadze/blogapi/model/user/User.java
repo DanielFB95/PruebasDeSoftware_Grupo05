@@ -34,14 +34,10 @@ import java.util.List;
 
 @Builder
 @EqualsAndHashCode(callSuper = true)
-@Builder
 @AllArgsConstructor
 @Entity
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-@AllArgsConstructor
-@Builder
 @Table(name = "users", uniqueConstraints = { @UniqueConstraint(columnNames = { "username" }),
 		@UniqueConstraint(columnNames = { "email" }) })
 public class User extends DateAudit {

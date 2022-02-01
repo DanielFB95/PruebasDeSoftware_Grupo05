@@ -8,6 +8,7 @@ import com.sopromadze.blogapi.model.role.Role;
 import com.sopromadze.blogapi.model.role.RoleName;
 import com.sopromadze.blogapi.model.user.Company;
 import com.sopromadze.blogapi.model.user.User;
+import com.sopromadze.blogapi.payload.ApiResponse;
 import com.sopromadze.blogapi.payload.PagedResponse;
 import com.sopromadze.blogapi.repository.CategoryRepository;
 import com.sopromadze.blogapi.security.UserPrincipal;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.Converters;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,6 +72,8 @@ class CategoryServiceImplTest {
     Page<Category> pageContentCategory;
     PagedResponse<Category> pagedResponse;
     List<Category>listaCategorias;
+    ApiResponse apiResponse;
+    ResponseEntity<ApiResponse> apiResponseResponseEntity;
 
     @BeforeEach
     void init(){
@@ -197,6 +201,12 @@ class CategoryServiceImplTest {
                 ,pageContentCategory.getSize(),pageContentCategory.getTotalElements()
                 ,pageContentCategory.getTotalPages(),pageContentCategory.isLast());
 
+        apiResponse = ApiResponse.builder()
+                .success(true)
+                .message("You successfully deleted category")
+                .build();
+
+        apiResponseResponseEntity = ResponseEntity.ok().body(apiResponse);
 
     }
 
@@ -259,7 +269,7 @@ class CategoryServiceImplTest {
         category.setName(categoriaModificada.getName());
         category.setPosts(categoriaModificada.getPosts());
         when(categoryRepository.save(any())).thenReturn(category);
-        assertEquals(1,categoryServiceImpl.updateCategory(1L, category,userPrincipal).getBody().getPosts().size());
+        assertEquals(categoryResponseEntityOK,categoryServiceImpl.updateCategory(1L, category,userPrincipal));
     }
 
     @Test
@@ -271,7 +281,7 @@ class CategoryServiceImplTest {
         category.setName(categoriaModificada.getName());
         category.setPosts(categoriaModificada.getPosts());
         when(categoryRepository.save(any())).thenReturn(category);
-        assertEquals(1,categoryServiceImpl.updateCategory(1L, category,adminPrincipal).getBody().getPosts().size());
+        assertEquals(categoryResponseEntityOK,categoryServiceImpl.updateCategory(1L, category,adminPrincipal));
     }
 
     @Test
@@ -283,10 +293,28 @@ class CategoryServiceImplTest {
     }
 
     @Test
-    @DisplayName("")
-    void deleteCategory_succesUserOwner(){
+    @DisplayName("deleteCategory funciona correctamente con un usuario creador de la categoria")
+    void deleteCategory_successUserOwner(){
 
         when(categoryRepository.findById(any(Long.class))).thenReturn(Optional.of(category));
-  
+        doNothing().when(categoryRepository).deleteById(any(Long.class));
+        assertEquals(apiResponseResponseEntity,categoryServiceImpl.deleteCategory(1L, userPrincipal));
+    }
+
+    @Test
+    @DisplayName("deleteCategory funciona correctamente con un usuario administrador")
+    void deleteCategory_successAdmin(){
+
+        when(categoryRepository.findById(any(Long.class))).thenReturn(Optional.of(category));
+        doNothing().when(categoryRepository).deleteById(any(Long.class));
+        assertEquals(apiResponseResponseEntity,categoryServiceImpl.deleteCategory(1L, adminPrincipal));
+    }
+
+    @Test
+    @DisplayName("deleteCategory Unauthorized exception")
+    void deleteCategory_Unauthorized(){
+
+        when(categoryRepository.findById(any(Long.class))).thenReturn(Optional.of(category));
+        assertThrows(UnauthorizedException.class, () -> categoryServiceImpl.deleteCategory(1L,userNotOwnerPrincipal));
     }
 }

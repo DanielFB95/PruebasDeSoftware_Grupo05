@@ -82,6 +82,7 @@ public class UserController {
 		return new ResponseEntity<  >(response, HttpStatus.OK);
 	}
 
+	//Pablo
 	@GetMapping("/{username}/albums")
 	public ResponseEntity<PagedResponse<Album>> getUserAlbums(@PathVariable(name = "username") String username,
 			@RequestParam(name = "page", required = false, defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) Integer page,
@@ -126,6 +127,8 @@ public class UserController {
 		return new ResponseEntity< >(apiResponse, HttpStatus.OK);
 	}
 
+
+	//Manolo
 	@PutMapping("/{username}/takeAdmin")
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<ApiResponse> takeAdmin(@PathVariable(name = "username") String username) {
