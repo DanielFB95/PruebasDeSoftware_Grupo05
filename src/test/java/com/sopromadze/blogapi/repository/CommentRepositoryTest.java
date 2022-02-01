@@ -86,7 +86,7 @@ class CommentRepositoryTest {
 
     }
 
-    //TODO: Solucionar esta prueba (fallo de persistencia si uso persist())
+
     @Test
     @DisplayName("Encontrar una lista paginada de comentarios en un post")
     void findByPostId_success() {

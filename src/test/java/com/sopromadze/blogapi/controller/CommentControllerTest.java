@@ -177,17 +177,15 @@ class CommentControllerTest {
 
     }
 
-    //TODO : Solucionar el problema de NullPointerException: "response is null"
+
     @Test
     @DisplayName("DELETE / COMMENT devolviendo 200")
     @WithUserDetails(value = "user", userDetailsServiceBeanName = "customUserDetailsService")
     void deleteComment_returns200_success() throws Exception {
 
         ApiResponse response = new ApiResponse(Boolean.TRUE, "You successfully deleted comment");
-        HttpStatus status = HttpStatus.OK;
 
-
-        lenient().when(commentService.deleteComment(post.getId(), comment.getId(), userPrincipal)).thenReturn(response);
+        lenient().when(commentService.deleteComment(any(Long.class), any(Long.class), any())).thenReturn(response);
 
         mockMvc.perform(delete(REQUEST_MAPPING + "/{id}", post.getId(), comment.getId())
                         .contentType("application/json")
