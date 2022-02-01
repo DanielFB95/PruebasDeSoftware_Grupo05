@@ -3,6 +3,7 @@ package com.sopromadze.blogapi.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sopromadze.blogapi.config.SpringSecurityTestConfig;
 import com.sopromadze.blogapi.model.user.User;
+import com.sopromadze.blogapi.payload.UserIdentityAvailability;
 import com.sopromadze.blogapi.payload.UserSummary;
 import com.sopromadze.blogapi.security.UserPrincipal;
 import com.sopromadze.blogapi.service.impl.UserServiceImpl;
@@ -49,6 +50,8 @@ class UserControllerTest {
     UserPrincipal userPrincipal;
     UserSummary userSummary;
     ResponseEntity<UserSummary> userSummaryResponseEntity;
+    UserIdentityAvailability userIdentityAvailability;
+    ResponseEntity<UserIdentityAvailability> userIdentityAvailabilityResponseEntity;
 
     @BeforeEach
     void setUp() {
@@ -76,6 +79,13 @@ class UserControllerTest {
                 .build();
 
         userSummaryResponseEntity = ResponseEntity.ok().body(userSummary);
+
+        userIdentityAvailability = UserIdentityAvailability.builder()
+                .available(true)
+                .build();
+
+        userIdentityAvailabilityResponseEntity = ResponseEntity.ok().body(userIdentityAvailability);
+
     }
 
     @Test
@@ -86,8 +96,7 @@ class UserControllerTest {
         when(userService.getCurrentUser(ArgumentMatchers.any())).thenReturn(userSummary);
         mockMvc.perform(get("/api/users/me").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(userPrincipal)))
                 .andExpect(jsonPath("$.id", Matchers.equalTo(1)))
-                .andExpect(jsonPath("$.username", Matchers.equalTo("DanielFB")))
-                .andReturn();
+                .andExpect(jsonPath("$.username", Matchers.equalTo("DanielFB")));
     }
 
     @Test
@@ -98,6 +107,15 @@ class UserControllerTest {
         when(userService.getCurrentUser(ArgumentMatchers.any())).thenReturn(userSummary);
         mockMvc.perform(get("/api/users/me").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(userPrincipal)))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET confirmar si el nombre de usuario está disponible funciona correctamente")
+    void checkUsernameAvailability() throws Exception{
+
+        when(userService.checkUsernameAvailability(ArgumentMatchers.any())).thenReturn(userIdentityAvailability);
+        mockMvc.perform(get("/api/users/checkUsernameAvailability").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(userPrincipal)).param("username",userPrincipal.getUsername()))
+                .andExpect(jsonPath("$.available", Matchers.equalTo(true)));
     }
 
 }
