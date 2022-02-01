@@ -6,6 +6,7 @@ import com.sopromadze.blogapi.model.Album;
 import com.sopromadze.blogapi.model.role.Role;
 import com.sopromadze.blogapi.model.role.RoleName;
 import com.sopromadze.blogapi.model.user.User;
+import com.sopromadze.blogapi.payload.ApiResponse;
 import com.sopromadze.blogapi.service.AlbumService;
 import com.sopromadze.blogapi.service.UserService;
 import lombok.extern.java.Log;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.Instant;
@@ -90,10 +92,35 @@ class UserControllerTest {
     @Test
     void whenGetUserAlbums_success() throws Exception{
 
-        mockMvc.perform(get("/api/users/{username}/albums","Juanguti")
+        mockMvc.perform(get("/api/users/{username}/albums",user.getUsername())
                         .param("page","1")
                         .param("size","1")
                         .contentType("application/json"))
+                .andExpect(status().isOk());
+
+    }
+
+    
+    @Test
+    @WithMockUser(authorities = {"ROLE_ADMIN"})
+    void whenAddUser_success() throws Exception{
+
+        mockMvc.perform(post("/api/users")
+                .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isCreated());
+
+    }
+
+    @Test
+    @WithMockUser(authorities = {"ROLE_ADMIN"})
+    void whenGiveAdmin_success() throws Exception{
+
+        ApiResponse response = new ApiResponse(Boolean.TRUE, "Permisos otorgados");
+
+        mockMvc.perform(put("/api/users/{username}/giveAdmin",user.getUsername())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(response)))
                 .andExpect(status().isOk());
 
     }
