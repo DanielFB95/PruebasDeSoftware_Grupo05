@@ -96,15 +96,7 @@ class CommentControllerTest {
                 .comments(new ArrayList<>())
                 .build();
 
-       /* userPrincipal = UserPrincipal.builder()
-                .id(1L)
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .password(user.getPassword())
-                .authorities(new ArrayList<>())
-                .build();*/
+
         userPrincipal = new UserPrincipal(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail(), user.getPassword(), Arrays.asList(new SimpleGrantedAuthority(RoleName.ROLE_USER.toString())));
 
         post.getComments().add(comment);
@@ -115,6 +107,18 @@ class CommentControllerTest {
 
     @Test
     @DisplayName("GET / COMMENT devolviendo 200")
+    void getComment_succes() throws Exception{
+
+        lenient().when(commentService.getComment(any(Long.class), any(Long.class))).thenReturn(comment);
+        mockMvc.perform(get(REQUEST_MAPPING, post.getId())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(comment)))
+                .andExpect(status().isOk());
+
+    }
+
+    @Test
+    @DisplayName("GET / ALL COMMENTS devolviendo 200")
     void getAllComments_success() throws Exception {
 
         Page<Comment> page = new PageImpl(Arrays.asList(comment));
@@ -192,6 +196,23 @@ class CommentControllerTest {
                         .content(objectMapper.writeValueAsString(response))
                 )
                 .andExpect(status().isOk());
+
+    }
+
+    @Test
+    @DisplayName("DELETE / COMMENT devolviendo 400")
+    @WithUserDetails(value = "user", userDetailsServiceBeanName = "customUserDetailsService")
+    void deleteComment_returns400_badRequest() throws Exception {
+
+        ApiResponse response = new ApiResponse(Boolean.FALSE, "Comment does not belong to post");
+
+        lenient().when(commentService.deleteComment(any(Long.class), any(Long.class), any())).thenReturn(response);
+
+        mockMvc.perform(delete(REQUEST_MAPPING + "/{id}", post.getId(), 0L)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(response))
+                )
+                .andExpect(status().isBadRequest());
 
     }
 

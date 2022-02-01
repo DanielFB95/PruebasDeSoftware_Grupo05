@@ -9,10 +9,12 @@ import com.sopromadze.blogapi.model.role.RoleName;
 import com.sopromadze.blogapi.model.user.User;
 import com.sopromadze.blogapi.payload.ApiResponse;
 import com.sopromadze.blogapi.payload.CommentRequest;
+import com.sopromadze.blogapi.payload.PagedResponse;
 import com.sopromadze.blogapi.repository.CommentRepository;
 import com.sopromadze.blogapi.repository.PostRepository;
 import com.sopromadze.blogapi.repository.UserRepository;
 import com.sopromadze.blogapi.security.UserPrincipal;
+import lombok.extern.java.Log;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,6 +32,9 @@ import org.mockito.Mock;
 import static org.mockito.Mockito.*;
 
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
+import org.springframework.data.domain.*;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.ArrayList;
@@ -40,7 +45,9 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Log
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 class CommentServiceImplTest {
 
     @InjectMocks
@@ -48,6 +55,9 @@ class CommentServiceImplTest {
 
     @Mock
     CommentRepository commentRepository;
+
+    @Mock
+    UserRepository userRepository;
 
     @Mock
     PostRepository postRepository;
@@ -77,7 +87,6 @@ class CommentServiceImplTest {
     @BeforeEach
     void initData() {
 
-        //commentService = new CommentServiceImpl(commentRepository, postRepository, userRepository);
 
         user = User.builder()
                 .id(1L)
@@ -196,6 +205,7 @@ class CommentServiceImplTest {
 
     //Devolucion de excepcion BlogapiException
     @Test
+    @DisplayName("Lanzar BlogApiException si el comentario no pertenece al post")
     public void getCommentWrongPost_blogApiException() {
 
         when(postRepository.findById(any(Long.class))).thenReturn(Optional.of(anotherPost));
@@ -209,6 +219,42 @@ class CommentServiceImplTest {
 
 
     ////////////
+    @Test
+    @DisplayName("Mostrar todos los comentarios")
+    public void getAllComments_success(){
+
+        Page<Comment> page = new PageImpl(Arrays.asList(comment));
+
+        PagedResponse<Comment> result = new PagedResponse();
+        result.setContent(page.getContent());
+        result.setTotalPages(1);
+        result.setTotalElements(1);
+        result.setLast(true);
+        result.setSize(1);
+        
+        when(commentRepository.findByPostId(any(Long.class), any())).thenReturn(page);
+
+       assertEquals(result, commentService.getAllComments(post.getId(), result.getPage(), result.getSize()));
+    }
+
+
+
+    @Test
+    @DisplayName("Agregar un nuevo comentario")
+    public void addComment_success() {
+
+        String mensaje = "Este es un nuevo comentario para este post";
+        when(postRepository.findById(any(Long.class))).thenReturn(Optional.of(post));
+        when(userRepository.getUser(any())).thenReturn(user);
+        when(commentRepository.save(any())).thenReturn(new Comment(mensaje));
+
+        userPrincipal = UserPrincipal.create(user);
+
+        commentRequest.setBody(mensaje);
+        commentService.addComment(commentRequest, post.getId(), userPrincipal);
+
+        assertEquals(commentRequest.getBody(), commentService.addComment(commentRequest, post.getId(), userPrincipal).getBody());
+    }
 
 
     //Funcionamiento correcto de updateComment (COMO USUARIO Y COMO ADMIN)
