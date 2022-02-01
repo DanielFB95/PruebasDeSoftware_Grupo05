@@ -15,6 +15,7 @@ import com.sopromadze.blogapi.service.AlbumService;
 import com.sopromadze.blogapi.service.PostService;
 import com.sopromadze.blogapi.service.UserService;
 import com.sopromadze.blogapi.utils.AppConstants;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
+
 
 @RestController
 @RequestMapping("/api/users")
@@ -82,6 +84,7 @@ public class UserController {
 		return new ResponseEntity<  >(response, HttpStatus.OK);
 	}
 
+	//Pablo
 	@GetMapping("/{username}/albums")
 	public ResponseEntity<PagedResponse<Album>> getUserAlbums(@PathVariable(name = "username") String username,
 			@RequestParam(name = "page", required = false, defaultValue = AppConstants.DEFAULT_PAGE_NUMBER) Integer page,
@@ -126,6 +129,8 @@ public class UserController {
 		return new ResponseEntity< >(apiResponse, HttpStatus.OK);
 	}
 
+
+	//Manolo
 	@PutMapping("/{username}/takeAdmin")
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<ApiResponse> takeAdmin(@PathVariable(name = "username") String username) {

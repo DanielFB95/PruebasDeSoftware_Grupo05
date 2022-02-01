@@ -16,10 +16,12 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Builder
+@AllArgsConstructor
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Table(name = "roles")
 public class Role {
 	@Id
