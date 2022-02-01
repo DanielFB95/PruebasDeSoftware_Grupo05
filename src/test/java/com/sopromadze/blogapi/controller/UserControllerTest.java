@@ -2,21 +2,36 @@ package com.sopromadze.blogapi.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sopromadze.blogapi.config.SpringSecurityTestConfig;
+import com.sopromadze.blogapi.model.user.User;
+import com.sopromadze.blogapi.payload.UserIdentityAvailability;
+import com.sopromadze.blogapi.payload.UserSummary;
+import com.sopromadze.blogapi.security.UserPrincipal;
+import com.sopromadze.blogapi.service.impl.UserServiceImpl;
+import lombok.extern.java.Log;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import com.sopromadze.blogapi.model.Album;
 import com.sopromadze.blogapi.model.role.Role;
 import com.sopromadze.blogapi.model.role.RoleName;
-import com.sopromadze.blogapi.model.user.User;
 import com.sopromadze.blogapi.payload.ApiResponse;
 import com.sopromadze.blogapi.service.AlbumService;
 import com.sopromadze.blogapi.service.UserService;
-import lombok.extern.java.Log;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.test.web.servlet.MockMvc;
+import java.util.ArrayList;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -32,10 +47,20 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@Log
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {SpringSecurityTestConfig.class})
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes ={SpringSecurityTestConfig.class} )
 @AutoConfigureMockMvc
+@Log
 class UserControllerTest {
+
+    @MockBean
+    private UserServiceImpl userService;
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @MockBean
     UserService userService;
@@ -43,15 +68,15 @@ class UserControllerTest {
     @MockBean
     AlbumService albumService;
 
-    @Autowired
-    MockMvc mockMvc;
-
-    @Autowired
-    ObjectMapper objectMapper;
-
     User user;
     Album album;
     List<Album> albums;
+
+    UserPrincipal userPrincipal;
+    UserSummary userSummary;
+    ResponseEntity<UserSummary> userSummaryResponseEntity;
+    UserIdentityAvailability userIdentityAvailability;
+    ResponseEntity<UserIdentityAvailability> userIdentityAvailabilityResponseEntity;
 
     @BeforeEach
     void initData(){
@@ -82,11 +107,65 @@ class UserControllerTest {
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
 
+            userPrincipal = UserPrincipal.builder()
+                    .id(user.getId())
+                    .username(user.getUsername())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .build();
+
+            userSummary = UserSummary.builder()
+                    .id(userPrincipal.getId())
+                    .username(userPrincipal.getUsername())
+                    .firstName(userPrincipal.getFirstName())
+                    .lastName(userPrincipal.getLastName())
+                    .build();
+
+            userSummaryResponseEntity = ResponseEntity.ok().body(userSummary);
+
+            userIdentityAvailability = UserIdentityAvailability.builder()
+                    .available(true)
+                    .build();
+
+            userIdentityAvailabilityResponseEntity = ResponseEntity.ok().body(userIdentityAvailability);
 
 
 
 
 
+
+
+        }
+
+    @Test
+    @WithUserDetails("user")
+    @DisplayName("GET traer un usuario con un usuario valido")
+    void getCurrentUser_successUserOwner() throws Exception{
+
+        when(userService.getCurrentUser(ArgumentMatchers.any())).thenReturn(userSummary);
+        mockMvc.perform(get("/api/users/me").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(userPrincipal)))
+                .andExpect(jsonPath("$.id", Matchers.equalTo(1)))
+                .andExpect(jsonPath("$.username", Matchers.equalTo(user.getUsername())));
+    }
+
+    @Test
+    @WithUserDetails("admin")
+    @DisplayName("GET traer un usuario con un usuario no válido")
+    void getCurrentUser_Unauthorized() throws Exception{
+
+        when(userService.getCurrentUser(ArgumentMatchers.any())).thenReturn(userSummary);
+        mockMvc.perform(get("/api/users/me").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(userPrincipal)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET confirmar si el nombre de usuario está disponible funciona correctamente")
+    void checkUsernameAvailability() throws Exception {
+
+        when(userService.checkUsernameAvailability(ArgumentMatchers.any())).thenReturn(userIdentityAvailability);
+        mockMvc.perform(get("/api/users/checkUsernameAvailability").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userPrincipal)).param("username", userPrincipal.getUsername()))
+                .andExpect(jsonPath("$.available", Matchers.equalTo(true)));
     }
 
     @Test
@@ -122,6 +201,7 @@ class UserControllerTest {
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(response)))
                 .andExpect(status().isOk());
+
 
     }
 
