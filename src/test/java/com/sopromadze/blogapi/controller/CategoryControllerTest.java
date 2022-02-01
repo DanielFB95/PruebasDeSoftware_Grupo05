@@ -134,13 +134,13 @@ class CategoryControllerTest {
     }
 
     @Test
-    //@WithMockUser("admin")
-    @DisplayName("POST añadir categoria con un usuario no válido y da error 401")
+    @WithMockUser(authorities = {"ROLE_ADMIN"})
+    @DisplayName("POST añadir categoria con un usuario no válido da error")
     void addCategory_Unauthorized() throws Exception{
 
         mockMvc.perform(post("/api/categories").contentType(MediaType.APPLICATION_JSON).characterEncoding("utf-8")
                         .content(objectMapper.writeValueAsString(category1)).accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
 
     }
 
@@ -158,7 +158,7 @@ class CategoryControllerTest {
 
     @Test
     //@WithMockUser("admin")
-    @DisplayName("PUT modifica una categoria con un usuario no validado y da error 401")
+    @DisplayName("PUT modifica una categoria con un usuario no validado da error")
     void putCategory_Unauthorized() throws  Exception{
 
         when(categoryService.updateCategory(any(Long.class),ArgumentMatchers.any(),ArgumentMatchers.any())).thenReturn(categoryResponseEntity);
