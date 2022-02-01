@@ -63,9 +63,6 @@ class UserControllerTest {
     private ObjectMapper objectMapper;
 
     @MockBean
-    UserService userService;
-
-    @MockBean
     AlbumService albumService;
 
     User user;
@@ -144,7 +141,7 @@ class UserControllerTest {
 
         when(userService.getCurrentUser(ArgumentMatchers.any())).thenReturn(userSummary);
         mockMvc.perform(get("/api/users/me").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(userPrincipal)))
-                .andExpect(jsonPath("$.id", Matchers.equalTo(1)))
+                .andExpect(jsonPath("$.id", Matchers.equalTo(user.getId())))
                 .andExpect(jsonPath("$.username", Matchers.equalTo(user.getUsername())));
     }
 
