@@ -101,6 +101,17 @@ class AlbumControllerTest {
     }
 
     @Test
+   // @WithMockUser(authorities = {"ROLE_USER","ROLE_ADMIN"})
+    void whenUpdateAlbumUnauthorized_blogapiException() throws Exception{
+
+        mockMvc.perform(put("/api/albums/{id}",1L)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(albumRequest)))
+                .andExpect(status().isUnauthorized());
+
+    }
+
+    @Test
     @WithMockUser(authorities = {"ROLE_USER","ROLE_ADMIN"})
     void whenDeleteAlbum_success() throws Exception{
 
@@ -108,6 +119,17 @@ class AlbumControllerTest {
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(albumRequest)))
                 .andExpect(status().isNoContent());
+
+    }
+
+    @Test
+    //@WithMockUser(authorities = {"ROLE_USER","ROLE_ADMIN"})
+    void whenDeleteAlbumUnauthorized_blogapiException() throws Exception{
+
+        mockMvc.perform(delete("/api/albums/{id}",1L)
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(albumRequest)))
+                .andExpect(status().isUnauthorized());
 
     }
 
