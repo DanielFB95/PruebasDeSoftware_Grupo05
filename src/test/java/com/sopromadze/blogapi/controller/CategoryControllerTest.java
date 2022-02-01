@@ -114,13 +114,11 @@ class CategoryControllerTest {
         when(categoryService.getAllCategories(any(Integer.class),any(Integer.class))).thenReturn(categoryPagedResponse);
 
         mockMvc.perform(get("/api/categories").contentType(MediaType.APPLICATION_JSON)
-                        .characterEncoding("utf-8").accept(MediaType.APPLICATION_JSON))
+                        .characterEncoding("utf-8").accept(MediaType.APPLICATION_JSON).param("page", "1").param("size","1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id", is(1)))
                 .andExpect(jsonPath("$.content[1].id", is(2)))
                 .andReturn();
-
-        //.param("student-id", "1")
     }
 
     @Test
@@ -129,7 +127,8 @@ class CategoryControllerTest {
     void addCategory_success() throws Exception{
 
         mockMvc.perform(post("/api/categories").contentType(MediaType.APPLICATION_JSON).characterEncoding("utf-8")
-                        .content(objectMapper.writeValueAsString(category1)).accept(MediaType.APPLICATION_JSON)).andExpect(status().isCreated())
+                        .content(objectMapper.writeValueAsString(category1)).accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id", Matchers.equalTo(1)))
                 .andExpect(jsonPath("$.name", Matchers.equalTo("categoria")));
     }
@@ -175,7 +174,7 @@ class CategoryControllerTest {
 
         when(categoryService.deleteCategory(any(Long.class),ArgumentMatchers.any())).thenReturn(apiResponseResponseEntity);
         MvcResult requestResult = mockMvc.perform(delete("/api/categories/{id}",category1.getId()))
-                .andExpect(status().isOk()).andExpect(status().isOk()).andReturn();
+                .andExpect(status().isOk()).andReturn();
 
         //ApiResponse result = requestResult.getResponse().getHeader();
         //assertEquals(apiResponse.getMessage(), result);
@@ -183,6 +182,17 @@ class CategoryControllerTest {
         //Collection<String> result = requestResult.getResponse().getHeaderNames();
         //LoggerFactory.getLogger(CategoryControllerTest.class).info(requestResult);
         //assertEquals(apiResponse.getMessage(), result);
+
+    }
+
+    @Test
+    //@WithMockUser("admin")
+    @DisplayName("DELETE elimina una categoria por id con un usuario no valido y da error 401")
+    void deleteCategory_Unauthorized() throws Exception{
+
+        when(categoryService.deleteCategory(any(Long.class),ArgumentMatchers.any())).thenReturn(apiResponseResponseEntity);
+        MvcResult requestResult = mockMvc.perform(delete("/api/categories/{id}",category1.getId()))
+                .andExpect(status().isUnauthorized()).andReturn();
 
     }
 }
