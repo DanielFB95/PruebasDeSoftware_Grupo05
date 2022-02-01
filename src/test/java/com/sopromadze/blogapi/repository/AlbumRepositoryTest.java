@@ -70,7 +70,8 @@ class AlbumRepositoryTest {
 
         pageRequest =  PageRequest.of(1,2);
 
-        when(albumRepository.findByCreatedBy(user.getId(), pageRequest )).thenReturn(albums);
+
+       when(albumRepository.findByCreatedBy(user.getId(), pageRequest )).thenReturn(albums);
 
         assertNotEquals(0, albumRepository.findByCreatedBy(user.getId(), pageRequest).getTotalElements());
 

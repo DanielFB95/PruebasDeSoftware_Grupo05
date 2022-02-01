@@ -1,7 +1,6 @@
 package com.sopromadze.blogapi.model.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sopromadze.blogapi.model.Album;
 import com.sopromadze.blogapi.model.audit.DateAudit;
 import com.sopromadze.blogapi.model.Comment;
@@ -32,12 +31,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@Builder
+
 @EqualsAndHashCode(callSuper = true)
+@Builder
+@AllArgsConstructor
 @Entity
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 @Table(name = "users", uniqueConstraints = { @UniqueConstraint(columnNames = { "username" }),
 		@UniqueConstraint(columnNames = { "email" }) })
 public class User extends DateAudit {
@@ -64,7 +64,7 @@ public class User extends DateAudit {
 	private String username;
 
 	@NotBlank
-	@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+	//@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
 	@Size(max = 100)
 	@Column(name = "password")
 	private String password;

@@ -8,14 +8,14 @@ import com.sopromadze.blogapi.model.user.Address;
 import com.sopromadze.blogapi.model.user.User;
 import com.sopromadze.blogapi.payload.ApiResponse;
 import com.sopromadze.blogapi.payload.InfoRequest;
-import com.sopromadze.blogapi.payload.UserProfile;
+
 import com.sopromadze.blogapi.security.UserPrincipal;
 import com.sopromadze.blogapi.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -26,46 +26,112 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.Instant;
 import java.util.ArrayList;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 import static org.mockito.Mockito.*;
 
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes = {SpringSecurityTestConfig.class})
+import com.sopromadze.blogapi.payload.UserIdentityAvailability;
+import com.sopromadze.blogapi.payload.UserSummary;
+import lombok.extern.java.Log;
+import org.hamcrest.Matchers;
+import org.mockito.ArgumentMatchers;
+import com.sopromadze.blogapi.model.Album;
+import com.sopromadze.blogapi.service.AlbumService;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.test.web.servlet.MockMvc;
+import java.util.ArrayList;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.util.List;
+
+
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes ={SpringSecurityTestConfig.class} )
 @AutoConfigureMockMvc
+@Log
 class UserControllerTest {
 
-    @Autowired
-    ObjectMapper objectMapper;
+    @MockBean
+    private UserServiceImpl userService;
 
     @Autowired
-    MockMvc mockMvc;
+    private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @MockBean
-    UserServiceImpl userService;
-
+    AlbumService albumService;
 
     User user;
-    User admin;
-    UserPrincipal userPrincipal;
+    Album album;
+    List<Album> albums;
     Address address;
+    UserPrincipal userPrincipal;
+    UserSummary userSummary;
+    ResponseEntity<UserSummary> userSummaryResponseEntity;
+    UserIdentityAvailability userIdentityAvailability;
+    ResponseEntity<UserIdentityAvailability> userIdentityAvailabilityResponseEntity;
     static String REQUEST_MAPPING = "/api/users";
 
     @BeforeEach
-    void setUp() {
+    void initData(){
+
+        album = new Album();
+        album.setTitle("Album 1º");
+        album.setId(2L);
+        album.setUser(user);
+        album.setCreatedAt(Instant.now());
+        album.setUpdatedAt(Instant.now());
+
+        albums = new ArrayList<>();
+        albums.add(album);
+
         user = User.builder()
-                .id(1L)
-                .firstName("Usuario")
-                .lastName("Existente")
-                .username("unusuario")
-                .password("usuariousuario")
-                .email("elusuario@gmail.com")
+                .firstName("Juan")
+                .lastName("Gutierrez")
+                .username("Juanguti")
+                .password("lacontrasenadeljuan")
+                .email("juanguti@gmail.com")
                 .comments(new ArrayList<>())
                 .roles(new ArrayList<>())
-                .posts(new ArrayList<>())
+                .albums(albums)
                 .build();
+
+        user.getRoles().add(new Role(RoleName.ROLE_USER));
+
+        user.setCreatedAt(Instant.now());
+        user.setUpdatedAt(Instant.now());
+
+            userPrincipal = UserPrincipal.builder()
+                    .id(user.getId())
+                    .username(user.getUsername())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .build();
+
+            userSummary = UserSummary.builder()
+                    .id(userPrincipal.getId())
+                    .username(userPrincipal.getUsername())
+                    .firstName(userPrincipal.getFirstName())
+                    .lastName(userPrincipal.getLastName())
+                    .build();
+
+            userSummaryResponseEntity = ResponseEntity.ok().body(userSummary);
+
+            userIdentityAvailability = UserIdentityAvailability.builder()
+                    .available(true)
+                    .build();
+
+            userIdentityAvailabilityResponseEntity = ResponseEntity.ok().body(userIdentityAvailability);
 
         address = new Address("Calle Vieja",
                 "Vieja Suite",
@@ -73,34 +139,75 @@ class UserControllerTest {
                 "11111",
                 null);
 
-        user.setAddress(address);
+        }
 
-        admin = User.builder()
-                .id(2L)
-                .firstName("Admin")
-                .lastName("El admin")
-                .username("eladmin")
-                .password("adminadmin")
-                .email("eladmin@gmail.com")
-                .comments(new ArrayList<>())
-                .roles(new ArrayList<>())
-                .build();
+    @Test
+    @WithUserDetails("user")
+    @DisplayName("GET traer un usuario con un usuario valido")
+    void getCurrentUser_successUserOwner() throws Exception{
 
-        user.getRoles().add(new Role(RoleName.ROLE_USER));
-        admin.getRoles().add(new Role(RoleName.ROLE_ADMIN));
+        when(userService.getCurrentUser(ArgumentMatchers.any())).thenReturn(userSummary);
+        mockMvc.perform(get("/api/users/me").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(userPrincipal)))
+                .andExpect(jsonPath("$.id", Matchers.equalTo(user.getId())))
+                .andExpect(jsonPath("$.username", Matchers.equalTo(user.getUsername())));
+    }
 
-        userPrincipal = UserPrincipal.builder()
-                .id(1L)
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .password(user.getPassword())
-                .authorities(new ArrayList<>())
-                .build();
+    @Test
+    @WithUserDetails("admin")
+    @DisplayName("GET traer un usuario con un usuario no válido")
+    void getCurrentUser_Unauthorized() throws Exception{
+
+        when(userService.getCurrentUser(ArgumentMatchers.any())).thenReturn(userSummary);
+        mockMvc.perform(get("/api/users/me").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(userPrincipal)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("GET confirmar si el nombre de usuario está disponible funciona correctamente")
+    void checkUsernameAvailability() throws Exception {
+
+        when(userService.checkUsernameAvailability(ArgumentMatchers.any())).thenReturn(userIdentityAvailability);
+        mockMvc.perform(get("/api/users/checkUsernameAvailability").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userPrincipal)).param("username", userPrincipal.getUsername()))
+                .andExpect(jsonPath("$.available", Matchers.equalTo(true)));
+    }
+
+    @Test
+    void whenGetUserAlbums_success() throws Exception{
+
+        mockMvc.perform(get("/api/users/{username}/albums",user.getUsername())
+                        .param("page","1")
+                        .param("size","1")
+                        .contentType("application/json"))
+                .andExpect(status().isOk());
 
     }
 
+    
+    @Test
+    @WithMockUser(authorities = {"ROLE_ADMIN"})
+    void whenAddUser_success() throws Exception{
+
+        mockMvc.perform(post("/api/users")
+                .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(user)))
+                .andExpect(status().isCreated());
+
+    }
+
+    @Test
+    @WithMockUser(authorities = {"ROLE_ADMIN"})
+    void whenGiveAdmin_success() throws Exception{
+
+        ApiResponse response = new ApiResponse(Boolean.TRUE, "Permisos otorgados");
+
+        mockMvc.perform(put("/api/users/{username}/giveAdmin",user.getUsername())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(response)))
+                .andExpect(status().isOk());
+
+
+    }
     @Test
     @DisplayName("Quitar los privilegios de admin a un ADMIN")
     @WithUserDetails(value = "admin", userDetailsServiceBeanName = "customUserDetailsService")
@@ -141,6 +248,5 @@ class UserControllerTest {
                 .andExpect(status().isOk());
 
     }
-
 
 }
