@@ -6,6 +6,7 @@ import com.sopromadze.blogapi.model.role.Role;
 import com.sopromadze.blogapi.model.role.RoleName;
 import com.sopromadze.blogapi.model.user.User;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.*;
 
@@ -65,35 +66,39 @@ class CommentRepositoryTest {
                 .user(user)
                 .email(user.getEmail())
                 .build();
+        comment.setCreatedAt(Instant.now());
+        comment.setUpdatedAt(Instant.now());
 
         post = Post.builder()
                 .title("Mi viaje a las Bahamas")
                 .body("Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum")
                 .comments(new ArrayList<>())
                 .build();
-
+        post.setCreatedAt(Instant.now());
+        post.setUpdatedAt(Instant.now());
 
 
         post.getComments().add(comment);
         user.getComments().add(comment);
         comment.setPost(post);
 
-        testEntityManager.persist(post);
-        testEntityManager.persist(user);
-        testEntityManager.persist(comment);
+
 
     }
 
-    //TODO: Solucionar esta prueba
+
     @Test
+    @DisplayName("Encontrar una lista paginada de comentarios en un post")
     void findByPostId_success() {
+        testEntityManager.persist(user);
+        testEntityManager.persist(post);
+        testEntityManager.persist(comment);
+        testEntityManager.flush();
+
+        Pageable pageable = PageRequest.of(0, 1);
 
 
-        Page<Comment> result = new PageImpl<>(Arrays.asList(comment));
-
-        Pageable pageable = PageRequest.of(1, 1);
-
-        assertEquals(result, commentRepository.findByPostId(comment.getId(), pageable));
+        assertEquals(1L, commentRepository.findByPostId(comment.getId(), pageable).getTotalElements());
 
     }
 }

@@ -2,27 +2,43 @@ package com.sopromadze.blogapi.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sopromadze.blogapi.config.SpringSecurityTestConfig;
+import com.sopromadze.blogapi.model.role.Role;
+import com.sopromadze.blogapi.model.role.RoleName;
+import com.sopromadze.blogapi.model.user.Address;
 import com.sopromadze.blogapi.model.user.User;
-import com.sopromadze.blogapi.payload.UserIdentityAvailability;
-import com.sopromadze.blogapi.payload.UserSummary;
+import com.sopromadze.blogapi.payload.ApiResponse;
+import com.sopromadze.blogapi.payload.InfoRequest;
+
 import com.sopromadze.blogapi.security.UserPrincipal;
 import com.sopromadze.blogapi.service.impl.UserServiceImpl;
-import lombok.extern.java.Log;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentMatchers;
-import com.sopromadze.blogapi.model.Album;
-import com.sopromadze.blogapi.model.role.Role;
-import com.sopromadze.blogapi.model.role.RoleName;
-import com.sopromadze.blogapi.payload.ApiResponse;
-import com.sopromadze.blogapi.service.AlbumService;
-import com.sopromadze.blogapi.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.Instant;
+import java.util.ArrayList;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+
+import static org.mockito.Mockito.*;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.sopromadze.blogapi.payload.UserIdentityAvailability;
+import com.sopromadze.blogapi.payload.UserSummary;
+import lombok.extern.java.Log;
+import org.hamcrest.Matchers;
+import org.mockito.ArgumentMatchers;
+import com.sopromadze.blogapi.model.Album;
+import com.sopromadze.blogapi.service.AlbumService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithUserDetails;
@@ -35,17 +51,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, classes ={SpringSecurityTestConfig.class} )
@@ -65,15 +71,16 @@ class UserControllerTest {
     @MockBean
     AlbumService albumService;
 
-    User user;
+    User user, admin;
     Album album;
     List<Album> albums;
-
+    Address address;
     UserPrincipal userPrincipal;
     UserSummary userSummary;
     ResponseEntity<UserSummary> userSummaryResponseEntity;
     UserIdentityAvailability userIdentityAvailability;
     ResponseEntity<UserIdentityAvailability> userIdentityAvailabilityResponseEntity;
+    static String REQUEST_MAPPING = "/api/users";
 
     @BeforeEach
     void initData(){
@@ -104,6 +111,18 @@ class UserControllerTest {
         user.setCreatedAt(Instant.now());
         user.setUpdatedAt(Instant.now());
 
+        admin = User.builder()
+                .firstName("Admin")
+                .lastName("El admin")
+                .username("eladmin")
+                .password("adminadmin")
+                .email("eladmin@gmail.com")
+                .comments(new ArrayList<>())
+                .roles(new ArrayList<>())
+                .build();
+
+        admin.getRoles().add(new Role(RoleName.ROLE_ADMIN));
+
             userPrincipal = UserPrincipal.builder()
                     .id(user.getId())
                     .username(user.getUsername())
@@ -126,11 +145,11 @@ class UserControllerTest {
 
             userIdentityAvailabilityResponseEntity = ResponseEntity.ok().body(userIdentityAvailability);
 
-
-
-
-
-
+        address = new Address("Calle Vieja",
+                "Vieja Suite",
+                "Vieja Ciudad",
+                "11111",
+                null);
 
         }
 
@@ -199,6 +218,46 @@ class UserControllerTest {
                         .content(objectMapper.writeValueAsString(response)))
                 .andExpect(status().isOk());
 
+
+    }
+    @Test
+    @DisplayName("Quitar los privilegios de admin a un ADMIN")
+    @WithUserDetails(value = "admin", userDetailsServiceBeanName = "customUserDetailsService")
+    void takeAdmin_success() throws Exception {
+        ApiResponse response = new ApiResponse(Boolean.TRUE, "You took ADMIN role from user: " + admin.getUsername());
+
+        mockMvc.perform(put(REQUEST_MAPPING + "/{username}/takeAdmin", admin.getUsername())
+                .contentType("application/json").content(objectMapper.writeValueAsString(response))).andExpect(status().isOk());
+
+    }
+
+    @Test
+    @DisplayName("Intentar quitar los privilegios de un admin con privilegios de USER / RETURN 401")
+    @WithUserDetails(value = "user", userDetailsServiceBeanName = "customUserDetailsService")
+    void takeAdmin_forbidden() throws Exception {
+        ApiResponse response = new ApiResponse(Boolean.TRUE, "You took ADMIN role from user: " + admin.getUsername());
+
+        mockMvc.perform(put(REQUEST_MAPPING + "/{username}/takeAdmin", admin.getUsername())
+                .contentType("application/json").content(objectMapper.writeValueAsString(response))).andExpect(status().isForbidden());
+
+    }
+
+
+    @Test
+    @DisplayName("PUT / USER Actualizar la direccion")
+    @WithUserDetails(value = "user", userDetailsServiceBeanName = "customUserDetailsService")
+    void setAddress_success() throws Exception {
+
+        InfoRequest newAddress = InfoRequest.builder()
+                .street("Calle Nueva")
+                .suite("Suite Nueva")
+                .city("Ciudad Nueva")
+                .zipcode("23456").build();
+
+        mockMvc.perform(put(REQUEST_MAPPING + "/setOrUpdateInfo")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(newAddress)))
+                .andExpect(status().isOk());
 
     }
 
