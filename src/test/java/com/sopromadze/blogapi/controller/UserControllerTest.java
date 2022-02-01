@@ -114,7 +114,8 @@ class UserControllerTest {
     void checkUsernameAvailability() throws Exception{
 
         when(userService.checkUsernameAvailability(ArgumentMatchers.any())).thenReturn(userIdentityAvailability);
-        mockMvc.perform(get("/api/users/checkUsernameAvailability").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(userPrincipal)).param("username",userPrincipal.getUsername()))
+        mockMvc.perform(get("/api/users/checkUsernameAvailability").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userPrincipal)).param("username",userPrincipal.getUsername()))
                 .andExpect(jsonPath("$.available", Matchers.equalTo(true)));
     }
 
