@@ -15,12 +15,14 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+@Builder
+@AllArgsConstructor
 @Entity
 @Data
+@AllArgsConstructor
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "roles")
-@Builder
 public class Role {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
